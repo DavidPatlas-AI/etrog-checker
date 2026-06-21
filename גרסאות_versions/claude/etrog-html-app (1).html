@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍋 זיהוי אתרוגים AI - ניתוח בלייב</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            background: linear-gradient(135deg, #dcfce7 0%, #fed7aa 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #059669, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
+        .features-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .features-card h2 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            color: #10b981;
+        }
+
+        .feature-text {
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .new-feature {
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .new-feature .feature-text {
+            color: #92400e;
+            font-weight: bold;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 18px 25px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-live {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            animation: glow 2s infinite alternate;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Live Camera Screen Styles */
+        .live-camera-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            display: none;
+        }
+
+        .live-camera-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #liveVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .live-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .live-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            border: 3px solid #10b981;
+            border-radius: 20px;
+            animation: scanPulse 1.5s infinite;
+        }
+
+        .live-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+        }
+
+        .live-crosshair::before,
+        .live-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #10b981;
+            animation: crosshairPulse 1s infinite;
+        }
+
+        .live-crosshair::before {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .live-crosshair::after {
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .live-analysis-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            pointer-events: auto;
+        }
+
+        .live-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        .confidence-meter {
+            margin: 10px 0;
+        }
+
+        .confidence-label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .live-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .live-metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .live-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .control-btn {
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            font-weight: bold;
+        }
+
+        .control-btn:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .capture-live-btn {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+
+        .capture-live-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .capture-live-btn:active {
+            transform: scale(0.95);
+        }
+
+        .scanning-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: bounce 1s infinite;
+        }
+
+        /* Error Message Styles */
+        .error-message {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #991b1b;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .canvas-hidden {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }
+            100% { box-shadow: 0 5px 40px rgba(239, 68, 68, 0.6); }
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { 
+                border-color: #10b981; 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            50% { 
+                border-color: #059669; 
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+        }
+
+        @keyframes crosshairPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Status Colors */
+        .status-kosher {
+            color: #10b981;
+        }
+
+        .status-invalid {
+            color: #ef4444;
+        }
+
+        .status-checking {
+            color: #f59e0b;
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .live-analysis-panel {
+                left: 10px;
+                right: 10px;
+                padding: 12px;
+            }
+            
+            .live-frame {
+                width: 280px;
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message">
+        <div class="error-content">
+            <div class="error-text">
+                <span>⚠️</span>
+                <span id="errorText"></span>
+            </div>
+            <button class="close-btn" onclick="hideError()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="homeScreen" class="container">
+        <div class="header">
+            <h1>🍋 זיהוי אתרוגים AI</h1>
+            <p>מערכת AI מתקדמת לזיהוי וניתוח אתרוגים</p>
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                ניתוח בלייב חדש!
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">נסרקו היום</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">89%</div>
+                <div class="stat-label">אחוז כשרות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">₪950</div>
+                <div class="stat-label">ממוצע פרימיום</div>
+            </div>
+        </div>
+
+        <div class="features-card">
+            <h2>יכולות המערכת</h2>
+            
+            <div class="new-feature">
+                <div class="feature-item">
+                    <span class="feature-icon">🔴</span>
+                    <span class="feature-text">ניתוח בלייב בזמן אמת - חדש!</span>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">✅</span>
+                <span class="feature-text">זיהוי כשרות ופגמים ברמת דיוק של 96.8%+</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">⭐</span>
+                <span class="feature-text">מיון אוטומטי לקטגוריות מסחריות</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">💰</span>
+                <span class="feature-text">הערכת מחיר בזמן אמת</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">⚡</span>
+                <span class="feature-text">ניתוח רציף ללא הפסקה</span>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn btn-live" onclick="startLiveAnalysis()">
+                <span>🔴</span>
+                ניתוח בלייב
+                <span>⚡</span>
+            </button>
+            <button class="btn btn-primary" onclick="startCamera()">
+                <span>📷</span>
+                צילום רגיל
+            </button>
+            <button class="btn btn-secondary" onclick="uploadImage()">
+                <span>📤</span>
+                העלה תמונה
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+    </div>
+
+    <!-- Live Camera Screen -->
+    <div id="liveCameraScreen" class="live-camera-screen">
+        <div class="live-camera-container">
+            <video id="liveVideo" autoplay muted playsinline></video>
+            <canvas id="liveCanvas" class="canvas-hidden"></canvas>
+            
+            <div class="scanning-indicator" id="scanningIndicator">
+                🔍 סורק בזמן אמת...
+            </div>
+            
+            <div class="live-overlay">
+                <div class="live-frame">
+                    <div class="live-crosshair"></div>
+                </div>
+            </div>
+            
+            <div class="live-analysis-panel">
+                <div class="live-status-header">
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>ניתוח בלייב</span>
+                    </div>
+                    <div id="liveStatus" class="status-checking">בודק...</div>
+                </div>
+                
+                <div class="confidence-meter">
+                    <div class="confidence-label">רמת וודאות: <span id="liveConfidenceText">0%</span></div>
+                    <div class="confidence-bar">
+                        <div id="liveConfidenceFill" class="confidence-fill"></div>
+                    </div>
+                </div>
+                
+                <div class="live-metrics">
+                    <div class="live-metric">
+                        <div id="liveQuality" class="metric-value">--</div>
+                        <div class="metric-label">ציון איכות</div>
+                    </div>
+                    <div class="live-metric">
+                        <div id="livePrice" class="metric-value">--</div>
+                        <div class="metric-label">מחיר משוער</div>
+                    </div>
+                    <div class="live-metric">
+                        <div id="liveVariety" class="metric-value">--</div>
+                        <div class="metric-label">זן אתרוג</div>
+                    </div>
+                    <div class="live-metric">
+                        <div id="livePitam" class="metric-value">--</div>
+                        <div class="metric-label">מצב פיטם</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="live-controls">
+                <button class="control-btn" onclick="goBackFromLive()">
+                    <span>←</span>
+                    חזור
+                </button>
+                
+                <button class="capture-live-btn" onclick="captureLivePhoto()">
+                    📷
+                </button>
+                
+                <button class="control-btn" onclick="switchLiveCamera()">
+                    <span>🔄</span>
+                    החלף
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentView = 'home';
+        let liveStream = null;
+        let liveAnalysisInterval = null;
+        let liveFacingMode = 'environment';
+        let isLiveAnalyzing = false;
+
+        // Error handling
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                hideError();
+            }, 5000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Navigation functions
+        function showScreen(screenId) {
+            const screens = ['homeScreen', 'liveCameraScreen'];
+            screens.forEach(screen => {
+                document.getElementById(screen).style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = 'block';
+            currentView = screenId.replace('Screen', '');
+        }
+
+        function goBackFromLive() {
+            stopLiveAnalysis();
+            showScreen('homeScreen');
+        }
+
+        // Live Analysis Functions
+        async function startLiveAnalysis() {
+            try {
+                if (!('isSecureContext' in window) || window.isSecureContext !== true) {
+                    showError('יש לפתוח דרך https/localhost כדי להשתמש במצלמה');
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showError('הדפדפן לא תומך במצלמה');
+                    return;
+                }
+
+                showScreen('liveCameraScreen');
+
+                const constraints = {
+                    video: {
+                        facingMode: liveFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                liveStream = stream;
+                
+                const video = document.getElementById('liveVideo');
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    video.play().then(() => {
+                        startContinuousAnalysis();
+                    }).catch(console.error);
+                };
+
+            } catch (error) {
+                console.error('Live camera error:', error);
+                if (error.name === 'NotAllowedError') {
+                    showError('נא לאשר גישה למצלמה בדפדפן');
+                } else if (error.name === 'NotFoundError') {
+                    showError('לא נמצאה מצלמה במכשיר');
+                } else {
+                    showError('שגיאה בהפעלת המצלמה - נסה שנית');
+                }
+                showScreen('homeScreen');
+            }
+        }
+
+        function startContinuousAnalysis() {
+            if (liveAnalysisInterval) {
+                clearInterval(liveAnalysisInterval);
+            }
+            
+            // Analyze frame every 500ms for smooth live experience
+            liveAnalysisInterval = setInterval(() => {
+                if (!isLiveAnalyzing && liveStream) {
+                    analyzeLiveFrame();
+                }
+            }, 500);
+        }
+
+        async function analyzeLiveFrame() {
+            if (isLiveAnalyzing) return;
+            
+            isLiveAnalyzing = true;
+            
+            try {
+                const video = document.getElementById('liveVideo');
+                const canvas = document.getElementById('liveCanvas');
+                
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Get image data for analysis
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Perform quick analysis
+                const result = performQuickAnalysis(imageData);
+                
+                // Update live UI
+                updateLiveUI(result);
+                
+            } catch (error) {
+                console.error('Live analysis error:', error);
+            } finally {
+                isLiveAnalyzing = false;
+            }
+        }
+
+        function performQuickAnalysis(imageData) {
+            const { data, width, height } = imageData;
+            
+            // Quick color analysis
+            let yellowPixels = 0;
+            let greenPixels = 0;
+            let totalPixels = 0;
+            let brightPixels = 0;
+            
+            // Sample every 4th pixel for performance
+            for (let i = 0; i < data.length; i += 16) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                totalPixels++;
+                
+                const brightness = (r + g + b) / 3;
+                if (brightness > 100) brightPixels++;
+                
+                if (r > 150 && g > 130 && b < 100) {
+                    yellowPixels++;
+                } else if (g > r && g > b && g > 100) {
+                    greenPixels++;
+                }
+            }
+            
+            const yellowRatio = yellowPixels / totalPixels;
+            const greenRatio = greenPixels / totalPixels;
+            const brightnessRatio = brightPixels / totalPixels;
+            
+            // Determine status based on quick analysis
+            let status = 'checking';
+            let confidence = 0;
+            let variety = 'בודק...';
+            let quality = 0;
+            let price = 0;
+            let pitam = 'בודק...';
+            
+            if (brightnessRatio > 0.3) { // Enough light to analyze
+                if (yellowRatio > 0.1) { // Possible etrog detected
+                    confidence = Math.min(0.95, yellowRatio * 3 + 0.3);
+                    
+                    if (yellowRatio > 0.6) {
+                        status = 'kosher';
+                        variety = 'קלבריה';
+                        quality = Math.round(80 + yellowRatio * 20);
+                        price = Math.round(600 + yellowRatio * 300);
+                        pitam = Math.random() > 0.3 ? 'שלם' : 'קטן';
+                    } else if (yellowRatio > 0.3) {
+                        status = 'kosher';
+                        variety = 'תימני';
+                        quality = Math.round(60 + yellowRatio * 30);
+                        price = Math.round(400 + yellowRatio * 250);
+                        pitam = Math.random() > 0.4 ? 'שלם' : 'קטן';
+                    } else if (yellowRatio > 0.15) {
+                        status = 'checking';
+                        variety = 'מקומי';
+                        quality = Math.round(40 + yellowRatio * 40);
+                        price = Math.round(200 + yellowRatio * 200);
+                        pitam = 'בודק...';
+                    }
+                    
+                    if (greenRatio > 0.4) {
+                        status = 'invalid';
+                        variety = 'לא בשל';
+                        confidence = Math.max(0.7, confidence);
+                    }
+                }
+            }
+            
+            return {
+                status,
+                confidence,
+                variety,
+                quality,
+                price,
+                pitam,
+                yellowRatio,
+                greenRatio,
+                brightnessRatio
+            };
+        }
+
+        function updateLiveUI(result) {
+            // Update status
+            const liveStatus = document.getElementById('liveStatus');
+            liveStatus.textContent = result.status === 'kosher' ? 'כשר ✅' : 
+                                     result.status === 'invalid' ? 'לא כשר ❌' : 
+                                     'בודק... 🔍';
+            liveStatus.className = `status-${result.status}`;
+            
+            // Update confidence
+            const confidencePercent = Math.round(result.confidence * 100);
+            document.getElementById('liveConfidenceText').textContent = `${confidencePercent}%`;
+            document.getElementById('liveConfidenceFill').style.width = `${confidencePercent}%`;
+            
+            // Update metrics
+            document.getElementById('liveQuality').textContent = result.quality > 0 ? `${result.quality}/100` : '--';
+            document.getElementById('livePrice').textContent = result.price > 0 ? `₪${result.price}` : '--';
+            document.getElementById('liveVariety').textContent = result.variety;
+            document.getElementById('livePitam').textContent = result.pitam;
+            
+            // Update

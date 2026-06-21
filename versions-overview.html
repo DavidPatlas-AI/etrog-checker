@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סקירה כללית של גרסאות - מערכת אתרוגים</title>
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-accent: #333;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0,0,0,0.1);
+            --card-bg: #f8f9fa;
+            --section-header-bg: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --section-header-hover: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            --stat-card-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --footer-bg: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --topbar-bg: rgba(255,255,255,0.95);
+            --topbar-link-bg: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            --topbar-link-border: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-secondary: #0f0f23;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-accent: #ffffff;
+            --border-color: #2a2a3a;
+            --shadow-color: rgba(0,0,0,0.3);
+            --card-bg: #1a1a2e;
+            --section-header-bg: linear-gradient(135deg, #1a1a2e 0%, #2a2a3a 100%);
+            --section-header-hover: linear-gradient(135deg, #2a2a3a 0%, #3a3a4a 100%);
+            --stat-card-bg: linear-gradient(135deg, #1a1a2e 0%, #2a2a3a 100%);
+            --footer-bg: linear-gradient(135deg, #1a1a2e 0%, #2a2a3a 100%);
+            --topbar-bg: rgba(15,15,35,0.95);
+            --topbar-link-bg: linear-gradient(135deg, #2a2a3a, #3a3a4a);
+            --topbar-link-border: #4a4a5a;
+        }
+
+        /* Performance optimizations */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Optimize images */
+        img {
+            max-width: 100%;
+            height: auto;
+            will-change: transform;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Optimize animations */
+        .feature, .btn, .card, .file-card, .stat-card {
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+
+        /* Lazy loading for images */
+        .lazy-image {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lazy-image.loaded {
+            opacity: 1;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Performance optimized transitions */
+        .feature, .btn, .card, .file-card, .stat-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Optimize hover effects */
+        .feature:hover, .btn:hover, .card:hover, .file-card:hover, .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+
+        /* Rest of existing CSS */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Advanced UI/UX improvements */
+        /* Glassmorphism design effects */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-top: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        /* Enhanced typography hierarchy */
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin: 0 0 20px 0;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        p {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            opacity: 0.8;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            line-height: 1.4;
+        }
+
+        /* Glassmorphism section headers */
+        .section-header {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .section-header:hover::before {
+            opacity: 1;
+        }
+
+        .section-header:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(31, 38, 135, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .section-icon {
+            width: clamp(50px, 6vw, 70px);
+            height: clamp(50px, 6vw, 70px);
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-header:hover .section-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .section-title {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.01em;
+            color: var(--text-accent);
+        }
+
+        .section-description {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: 500;
+            line-height: 1.6;
+            margin: 5px 0 0 0;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+        }
+
+        /* Glassmorphism file cards */
+        .file-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .file-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .file-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .file-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-name {
+            font-size: clamp(1.2rem, 2.5vw, 1.4rem);
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            color: var(--text-accent);
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-path {
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            word-break: break-all;
+            line-height: 1.5;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-size {
+            color: var(--text-secondary);
+            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+            margin: 15px 0;
+            line-height: 1.4;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border-left: 3px solid rgba(102, 126, 234, 0.6);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Enhanced action buttons */
+        .actions {
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .actions button {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 2.5vw, 18px);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .actions button:first-child {
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            color: white;
+        }
+
+        .actions button:last-child {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .actions button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(31, 38, 135, 0.3);
+        }
+
+        /* Enhanced status badges */
+        .status-badge {
+            display: inline-block;
+            padding: clamp(4px, 1.5vw, 8px) clamp(8px, 2vw, 16px);
+            border-radius: 25px;
+            font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+            font-weight: 600;
+            margin: 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Enhanced stat cards */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.4);
+        }
+
+        .stat-number {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.9;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Enhanced footer */
+        .footer {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 0 0 20px 20px;
+            text-align: center;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            background: var(--topbar-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: flex;
+            gap: 10px;
+            border-radius: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 6px 18px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .topbar a {
+            color: var(--text-accent);
+            background: var(--topbar-link-bg);
+            border: 1px solid var(--topbar-link-border);
+            border-radius: 18px;
+            padding: 6px 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .topbar a:hover, .topbar a:focus-visible {
+            background: var(--topbar-link-border);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .dark-mode-btn {
+            background: var(--topbar-link-bg);
+            border: 1px solid var(--topbar-link-border);
+            border-radius: 18px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            color: var(--text-accent);
+        }
+
+        .dark-mode-btn:hover {
+            background: var(--topbar-link-border);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .dark-mode-btn[data-theme="dark"] {
+            background: #4a4a5a;
+            color: #ffffff;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .file-card,
+            .section-header,
+            .stat-card {
+                border: 2px solid var(--text-primary);
+                background: rgba(255, 255, 255, 0.95);
+            }
+            
+            .actions button {
+                border: 2px solid var(--text-primary);
+            }
+        }
+
+        /* Header and content layout */
+        .header {
+            text-align: center;
+            padding: clamp(30px, 5vw, 50px) 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 20px;
+            z-index: 0;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 4s infinite;
+            z-index: 0;
+        }
+
+        .content {
+            padding: 40px 0;
+        }
+
+        .version-section {
+            margin-bottom: 50px;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        /* Status badge colors */
+        .status-stable {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .status-beta {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .status-alpha {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .status-experimental {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 70px 10px 10px 10px;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+            text-align: center;
+        }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Performance optimized animations */
+        @media (prefers-reduced-motion: reduce) {
+            .feature, .btn, .card, .file-card, .stat-card {
+                transition: none;
+            }
+            
+            .header::before, .stat-card::before {
+                animation: none;
+            }
+        }
+
+        /* Accessibility improvements */
+        .btn:focus,
+        .feature:focus,
+        .file-card:focus,
+        .section-header:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Animation keyframes */
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="index.html">🏠 דף הבית</a>
+        <a href="start.html">✅ התחל בדיקה</a>
+        <a href="for_growers.html">🌱 למגדלים</a>
+        <a href="מסמכים_docs/about.html">ℹ️ מידע</a>
+        <button id="darkModeToggle" class="dark-mode-btn" title="מצב כהה/בהיר">🌙</button>
+        </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>📚 סקירה כללית של גרסאות</h1>
+            <p>גלה את כל הגרסאות והקבצים במערכת זיהוי אתרוגים המתקדמת</p>
+        </header>
+
+        <main class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">גרסאות זמינות</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">סוגי קבצים</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">פלטפורמות</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">זמינות</div>
+                </div>
+            </div>
+
+            <div class="version-section">
+                <div class="section-header" onclick="toggleSection('claude')">
+                    <div class="section-icon">🤖</div>
+                    <div>
+                        <h2 class="section-title">גרסאות Claude AI</h2>
+                        <p class="section-description">גרסאות מתקדמות המבוססות על Claude AI עם יכולות ניתוח מתקדמות</p>
+                    </div>
+                </div>
+                <div id="claude-files" class="files-grid">
+                    <div class="file-card" onclick="openFile('גרסאות_versions/claude/etrog-advanced-analyzer.html')">
+                        <div class="file-name">מזהה אתרוגים מתקדם</div>
+                        <div class="file-path">גרסאות_versions/claude/etrog-advanced-analyzer.html</div>
+                        <div class="file-size">מערכת זיהוי אתרוגים מתקדמת עם מצלמה בזמן אמת</div>
+                        <div class="status-badge status-stable">יציב</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('גרסאות_versions/claude/etrog-advanced-analyzer.html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('גרסאות_versions/claude/etrog-advanced-analyzer.html')">תצוגה מקדימה</button>
+                    </div>
+                </div>
+                    <div class="file-card" onclick="openFile('גרסאות_versions/claude/advanced-etrog-detection-system.html')">
+                        <div class="file-name">מערכת זיהוי מתקדמת</div>
+                        <div class="file-path">גרסאות_versions/claude/advanced-etrog-detection-system.html</div>
+                        <div class="file-size">מערכת זיהוי אתרוגים מתקדמת עם יכולות AI</div>
+                        <div class="status-badge status-beta">בטא</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('גרסאות_versions/claude/advanced-etrog-detection-system.html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('גרסאות_versions/claude/advanced-etrog-detection-system.html')">תצוגה מקדימה</button>
+                    </div>
+                </div>
+                    <div class="file-card" onclick="openFile('גרסאות_versions/claude/face-detection-system.html')">
+                        <div class="file-name">מערכת זיהוי פנים</div>
+                        <div class="file-path">גרסאות_versions/claude/face-detection-system.html</div>
+                        <div class="file-size">מערכת זיהוי פנים מתקדמת עם AI</div>
+                        <div class="status-badge status-alpha">אלפא</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('גרסאות_versions/claude/face-detection-system.html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('גרסאות_versions/claude/face-detection-system.html')">תצוגה מקדימה</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="version-section">
+                <div class="section-header" onclick="toggleSection('react')">
+                    <div class="section-icon">⚛️</div>
+                    <div>
+                        <h2 class="section-title">גרסאות React</h2>
+                        <p class="section-description">גרסאות React מתקדמות עם ממשק משתמש מודרני</p>
+                    </div>
+                </div>
+                <div id="react-files" class="files-grid">
+                    <div class="file-card" onclick="openFile('גרסאות_versions/claude/etrog-html-app.html')">
+                        <div class="file-name">אפליקציית אתרוג HTML</div>
+                        <div class="file-path">גרסאות_versions/claude/etrog-html-app.html</div>
+                        <div class="file-size">גרסה ראשונה של מזהה אתרוגים ב-React</div>
+                        <div class="status-badge status-stable">יציב</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('גרסאות_versions/claude/etrog-html-app.html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('גרסאות_versions/claude/etrog-html-app.html')">תצוגה מקדימה</button>
+                    </div>
+                </div>
+                    <div class="file-card" onclick="openFile('גרסאות_versions/claude/etrog-html-app (1).html')">
+                        <div class="file-name">אפליקציית אתרוג HTML (גרסה 2)</div>
+                        <div class="file-path">גרסאות_versions/claude/etrog-html-app (1).html</div>
+                        <div class="file-size">גרסה משופרת של מזהה אתרוגים</div>
+                        <div class="status-badge status-beta">בטא</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('גרסאות_versions/claude/etrog-html-app (1).html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('גרסאות_versions/claude/etrog-html-app (1).html')">תצוגה מקדימה</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="version-section">
+                <div class="section-header" onclick="toggleSection('dev')">
+                    <div class="section-icon">🔧</div>
+                    <div>
+                        <h2 class="section-title">גרסאות פיתוח</h2>
+                        <p class="section-description">גרסאות ניסיוניות בפיתוח מתמשך</p>
+                    </div>
+                </div>
+                <div id="dev-files" class="files-grid">
+                    <div class="file-card" onclick="openFile('dev/')">
+                        <div class="file-name">תיקיית פיתוח</div>
+                        <div class="file-path">dev/</div>
+                        <div class="file-size">גרסאות ניסיוניות של React בפיתוח</div>
+                        <div class="status-badge status-experimental">ניסיוני</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('dev/')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('dev/')">תצוגה מקדימה</button>
+                    </div>
+                </div>
+                    <div class="file-card" onclick="openFile('פיתוח_dev/RUN.html')">
+                        <div class="file-name">הרצת פיתוח</div>
+                        <div class="file-path">פיתוח_dev/RUN.html</div>
+                        <div class="file-size">דף הרצה לבדיקת פיתוחים</div>
+                        <div class="status-badge status-experimental">ניסיוני</div>
+                        <div class="actions">
+                            <button onclick="event.stopPropagation(); openFile('פיתוח_dev/RUN.html')">פתח</button>
+                            <button onclick="event.stopPropagation(); previewFile('פיתוח_dev/RUN.html')">תצוגה מקדימה</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2025 מערכת זיהוי אתרוגים מתקדמת - כל הגרסאות זמינות לצפייה ובדיקה</p>
+        </footer>
+    </div>
+
+    <script>
+        // Performance optimizations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cache DOM elements for better performance
+            const cachedElements = {
+                sections: document.querySelectorAll('.version-section'),
+                fileCards: document.querySelectorAll('.file-card'),
+                statsGrid: document.querySelector('.stats-grid')
+            };
+
+            // Lazy loading for images
+            const lazyImages = document.querySelectorAll('.lazy-image');
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+
+            // Preload critical resources
+            const criticalResources = [
+                'index.html',
+                'start.html',
+                'for_growers.html'
+            ];
+
+            criticalResources.forEach(resource => {
+                const link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.href = resource;
+                document.head.appendChild(link);
+            });
+
+            // Optimize animations based on device performance
+            if ('connection' in navigator) {
+                if (navigator.connection.effectiveType === 'slow-2g' || 
+                    navigator.connection.effectiveType === '2g') {
+                    document.body.classList.add('low-performance');
+                }
+            }
+
+            // Add loading states for buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.onclick && !this.onclick.toString().includes('stopPropagation')) {
+                        this.innerHTML = '<span class="loading-spinner"></span> טוען...';
+                        this.style.pointerEvents = 'none';
+                    }
+            });
+        });
+
+            // Optimize scroll performance
+            let ticking = false;
+            function updateScroll() {
+                ticking = false;
+                // Add any scroll-based animations here
+            }
+
+            function requestTick() {
+                if (!ticking) {
+                    requestAnimationFrame(updateScroll);
+                    ticking = true;
+                }
+            }
+
+            window.addEventListener('scroll', requestTick, { passive: true });
+
+            // Add intersection observer for file cards
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cachedElements.fileCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                cardObserver.observe(card);
+            });
+
+            // Performance monitoring
+            if ('performance' in window) {
+                window.addEventListener('load', () => {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    console.log('Page load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+                });
+            }
+        });
+
+        // File operations with performance optimizations
+        function openFile(path) {
+            try {
+                // Use requestIdleCallback for better performance if available
+                const openFunction = () => {
+                    if (path.endsWith('/')) {
+                        // Directory - show contents
+                        alert('תיקייה: ' + path + '\n\nתוכן התיקייה יוצג כאן');
+                    } else {
+                        // File - open in new tab
+                        window.open(path, '_blank');
+                    }
+                };
+
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(openFunction, { timeout: 1000 });
+                } else {
+                    // Fallback to setTimeout for older browsers
+                    setTimeout(openFunction, 100);
+                }
+            } catch (error) {
+                console.error('Error opening file:', error);
+                alert('שגיאה בפתיחת הקובץ: ' + error.message);
+            }
+        }
+
+        function previewFile(path) {
+            try {
+                // Use requestIdleCallback for better performance if available
+                const previewFunction = () => {
+                    if (path.endsWith('/')) {
+                        alert('תצוגה מקדימה של תיקייה: ' + path);
+                    } else {
+                        // Create preview modal or iframe
+                        const previewWindow = window.open('', '_blank', 'width=800,height=600');
+                        previewWindow.document.write(`
+                            <html>
+                                <head><title>תצוגה מקדימה - ${path}</title></head>
+                                <body style="margin:0;padding:20px;font-family:Arial;">
+                                    <h2>תצוגה מקדימה: ${path}</h2>
+                                    <iframe src="${path}" width="100%" height="500" style="border:1px solid #ccc;"></iframe>
+                                </body>
+                            </html>
+                        `);
+                    }
+                };
+
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(previewFunction, { timeout: 1000 });
+                } else {
+                    setTimeout(previewFunction, 100);
+                }
+            } catch (error) {
+                console.error('Error previewing file:', error);
+                alert('שגיאה בתצוגה מקדימה: ' + error.message);
+            }
+        }
+
+        function toggleSection(sectionName) {
+            const filesDiv = document.getElementById(sectionName + '-files');
+            if (filesDiv) {
+                const isVisible = filesDiv.style.display !== 'none';
+                filesDiv.style.display = isVisible ? 'none' : 'grid';
+                
+                // Add smooth animation
+                if (!isVisible) {
+                    filesDiv.style.opacity = '0';
+                    filesDiv.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        filesDiv.style.transition = 'all 0.3s ease';
+                        filesDiv.style.opacity = '1';
+                        filesDiv.style.transform = 'translateY(0)';
+                    }, 10);
+                }
+            }
+        }
+
+        // Dark Mode functionality with performance optimizations
+        const darkModeBtn = document.getElementById('darkModeToggle');
+        const body = document.body;
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            body.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                darkModeBtn.textContent = '☀️'; // שינוי תמונה לכהה
+            } else {
+                darkModeBtn.textContent = '🌙'; // שינוי תמונה לבהיר
+            }
+        } else {
+            // במקרה שלא יש מצב כהה קודם, נציג כהה כברירת ברירה
+            body.setAttribute('data-theme', 'dark');
+            darkModeBtn.textContent = '☀️';
+        }
+
+        darkModeBtn.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            darkModeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Service Worker registration for caching (if supported)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>

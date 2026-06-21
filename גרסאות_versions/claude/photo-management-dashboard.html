@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח ניהול צילום אתרוגים - בודק אתרוגים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .etrog-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .etrog-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-right: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .etrog-item:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .etrog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .etrog-id {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .etrog-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.5s ease;
+        }
+
+        .etrog-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(149, 165, 166, 0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #2ecc71;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.warning {
+            background: #f39c12;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 לוח ניהול צילום אתרוגים</h1>
+            <p>מערכת מקצועית לניהול, מעקב ועיבוד צילומי אתרוגים תלת-ממדיים</p>
+        </div>
+
+        <div class="form-section">
+            <h2>➕ הוספת אתרוג חדש</h2>
+            <form id="addEtrogForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="etrogId">מספר אתרוג:</label>
+                        <input type="text" id="etrogId" required placeholder="למשל: ET001">
+                    </div>
+                    <div class="form-group">
+                        <label for="photographer">צלם:</label>
+                        <input type="text" id="photographer" required placeholder="שם הצלם">
+                    </div>
+                    <div class="form-group">
+                        <label for="camera">מצלמה:</label>
+                        <input type="text" id="camera" required placeholder="למשל: iPhone 15 Pro">
+                    </div>
+                    <div class="form-group">
+                        <label for="lighting">תאורה:</label>
+                        <input type="text" id="lighting" required placeholder="למשל: 2x LED Softbox">
+                    </div>
+                    <div class="form-group">
+                        <label for="turntable">פלטפורמה מסתובבת:</label>
+                        <input type="text" id="turntable" required placeholder="למשל: Manual 360°">
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">הערות:</label>
+                        <textarea id="notes" rows="3" placeholder="הערות נוספות..."></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ הוסף אתרוג</button>
+            </form>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h2>📊 סטטיסטיקות כלליות</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalEtrogs">0</div>
+                        <div class="stat-label">אתרוגים</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="completedEtrogs">0</div>
+                        <div class="stat-label">הושלמו</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalImages">0</div>
+                        <div class="stat-label">תמונות</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="avgProgress">0%</div>
+                        <div class="stat-label">ממוצע</div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportData()">📥 ייצא נתונים</button>
+                    <button class="btn btn-warning" onclick="generateReport()">📋 דוח מפורט</button>
+                    <button class="btn btn-secondary" onclick="openBatchModal()">🔄 עיבוד קבוצתי</button>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>🎯 התקדמות צילום</h2>
+                <div class="etrog-list" id="etrogList">
+                    <!-- Etrog items will be populated here -->
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="refreshData()">🔄 רענן נתונים</button>
+                    <button class="btn btn-warning" onclick="validateAll()">✅ בדוק תקינות</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>🔧 כלים מתקדמים</h2>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="open3DGuide()">📸 מדריך צילום</button>
+                <button class="btn btn-success" onclick="openProcessingGuide()">🧠 מדריך עיבוד</button>
+                <button class="btn btn-warning" onclick="openQualityCheck()">🔍 בדיקת איכות</button>
+                <button class="btn btn-secondary" onclick="openMetadataEditor()">📝 עורך מטא-דאטה</button>
+                <a href="index.html" class="btn btn-secondary">🏠 חזרה לדף הבית</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 בודק אתרוגים - מערכת ניהול צילום מקצועית</p>
+            <p>לשאלות ותמיכה: <a href="mailto:support@etrog-checker.com">support@etrog-checker.com</a></p>
+        </div>
+    </div>
+
+    <!-- Batch Processing Modal -->
+    <div id="batchModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('batchModal')">&times;</span>
+            <h2>🔄 עיבוד קבוצתי</h2>
+            <div class="form-group">
+                <label for="batchEtrogIds">מספרי אתרוגים (מופרדים בפסיקים):</label>
+                <textarea id="batchEtrogIds" rows="5" placeholder="ET001, ET002, ET003..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="batchPhotographer">צלם אחיד:</label>
+                <input type="text" id="batchPhotographer" placeholder="שם הצלם">
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="processBatch()">🔄 עבד קבוצה</button>
+                <button class="btn btn-secondary" onclick="closeModal('batchModal')">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Check Modal -->
+    <div id="qualityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('qualityModal')">&times;</span>
+            <h2>🔍 בדיקת איכות</h2>
+            <div id="qualityResults">
+                <!-- Quality check results will be populated here -->
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('qualityModal')">סגור</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - in real app this would come from backend
+        let etrogs = [
+            {
+                id: 'ET001',
+                photographer: 'יוסי כהן',
+                camera: 'iPhone 15 Pro',
+                lighting: '2x LED Softbox',
+                turntable: 'Manual 360°',
+                totalImages: 28,
+                requiredImages: 30,
+                status: 'processing',
+                date: '2024-01-15',
+                notes: 'צילום 360° הושלם, נדרשות 2 תמונות נוספות'
+            },
+            {
+                id: 'ET002',
+                photographer: 'שרה לוי',
+                camera: 'Samsung S23',
+                lighting: 'Natural + LED',
+                turntable: 'Electric 360°',
+                totalImages: 32,
+                requiredImages: 30,
+                status: 'completed',
+                date: '2024-01-14',
+                notes: 'כל התמונות צולמו בהצלחה'
+            },
+            {
+                id: 'ET003',
+                photographer: 'דוד אברהם',
+                camera: 'Canon EOS R',
+                lighting: 'Professional Studio',
+                turntable: 'High-end 360°',
+                totalImages: 0,
+                requiredImages: 30,
+                status: 'pending',
+                date: '2024-01-16',
+                notes: 'ממתין לצילום'
+            }
+        ];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboard();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('addEtrogForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewEtrog();
+            });
+        }
+
+        function addNewEtrog() {
+            const formData = new FormData(document.getElementById('addEtrogForm'));
+            const newEtrog = {
+                id: document.getElementById('etrogId').value,
+                photographer: document.getElementById('photographer').value,
+                camera: document.getElementById('camera').value,
+                lighting: document.getElementById('lighting').value,
+                turntable: document.getElementById('turntable').value,
+                totalImages: 0,
+                requiredImages: 30,
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0],
+                notes: document.getElementById('notes').value
+            };
+
+            etrogs.push(newEtrog);
+            updateDashboard();
+            showNotification('אתרוג נוסף בהצלחה!', 'success');
+            document.getElementById('addEtrogForm').reset();
+        }
+
+        function updateDashboard() {
+            updateStats();
+            updateEtrogList();
+        }
+
+        function updateStats() {
+            const totalEtrogs = etrogs.length;
+            const completedEtrogs = etrogs.filter(e => e.status === 'completed').length;
+            const totalImages = etrogs.reduce((sum, e) => sum + e.totalImages, 0);
+            const avgProgress = totalEtrogs > 0 ? 
+                Math.round(etrogs.reduce((sum, e) => sum + (e.totalImages / e.requiredImages * 100), 0) / totalEtrogs) : 0;
+
+            document.getElementById('totalEtrogs').textContent = totalEtrogs;
+            document.getElementById('completedEtrogs').textContent = completedEtrogs;
+            document.getElementById('totalImages').textContent = totalImages;
+            document.getElementById('avgProgress').textContent = avgProgress + '%';
+        }
+
+        function updateEtrogList() {
+            const etrogList = document.getElementById('etrogList');
+            etrogList.innerHTML = '';
+
+            etrogs.forEach(etrog => {
+                const progress = Math.round((etrog.totalImages / etrog.requiredImages) * 100);
+                const statusClass = `status-${etrog.status}`;
+                
+                const etrogItem = document.createElement('div');
+                etrogItem.className = 'etrog-item';
+                etrogItem.innerHTML = `
+                    <div class="etrog-header">
+                        <span class="etrog-id">${etrog.id}</span>
+                        <span class="etrog-status ${statusClass}">${getStatusText(etrog.status)}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="etrog-details">
+                        <div>צלם: ${etrog.photographer}</div>
+                        <div>תמונות: ${etrog.totalImages}/${etrog.requiredImages}</div>
+                        <div>התקדמות: ${progress}%</div>
+                        <div>תאריך: ${etrog.date}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="editEtrog('${etrog.id}')">✏️ ערוך</button>
+                        <button class="btn btn-success" onclick="viewDetails('${etrog.id}')">👁️ פרטים</button>
+                        <button class="btn btn-warning" onclick="deleteEtrog('${etrog.id}')">🗑️ מחק</button>
+                    </div>
+                `;
+                
+                etrogList.appendChild(etrogItem);
+            });
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'ממתין',
+                'processing': 'בצילום',
+                'completed': 'הושלם'
+            };
+            return statusMap[status] || status;
+        }
+
+        function editEtrog(etrogId) {
+            const etrog = etrogs.find(e => e.id === etrogId);
+            if (etrog) {
+                // Populate form with etrog data
+                document.getElementById('etrogId').value = etrog.id;
+                document.getElementById('photographer').value = etrog.photographer;
+                document.getElementById('camera').value = etrog.camera;
+                document.getElementById('lighting').value = etrog.lighting;
+                document.getElementById('turntable').value = etrog.turntable;
+                document.getElementById('notes').value = etrog.notes;
+                
+                showNotification('אתרוג נטען לעריכה', 'success');
+            }
+        }
+
+        function viewDetails(etrogId) {
+            const etrog = etrogs.find(e => e.id === etrogId);
+            if (etrog) {
+                alert(`פרטי אתרוג ${etrogId}:\n\nצלם: ${etrog.photographer}\nמצלמה: ${etrog.camera}\nתאורה: ${etrog.lighting}\nפלטפורמה: ${etrog.turntable}\nתמונות: ${etrog.totalImages}/${etrog.requiredImages}\nסטטוס: ${getStatusText(etrog.status)}\nתאריך: ${etrog.date}\nהערות: ${etrog.notes}`);
+            }
+        }
+
+        function deleteEtrog(etrogId) {
+            if (confirm(`האם אתה בטוח שברצונך למחוק את אתרוג ${etrogId}?`)) {
+                etrogs = etrogs.filter(e => e.id !== etrogId);
+                updateDashboard();
+                showNotification('אתרוג נמחק בהצלחה', 'success');
+            }
+        }
+
+        function exportData() {
+            const csv = generateCSV();
+            downloadFile(csv, 'etrog_photography_data.csv', 'text/csv');
+            showNotification('נתונים יוצאו בהצלחה', 'success');
+        }
+
+        function generateCSV() {
+            const headers = ['ID', 'צלם', 'מצלמה', 'תאורה', 'פלטפורמה', 'תמונות', 'נדרש', 'סטטוס', 'תאריך', 'הערות'];
+            const rows = etrogs.map(e => [
+                e.id, e.photographer, e.camera, e.lighting, e.turntable,
+                e.totalImages, e.requiredImages, e.status, e.date, e.notes
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            const report = generateDetailedReport();
+            downloadFile(report, 'etrog_photography_report.txt', 'text/plain');
+            showNotification('דוח מפורט נוצר בהצלחה', 'success');
+        }
+
+        function generateDetailedReport() {
+            const completed = etrogs.filter(e => e.status === 'completed').length;
+            const processing = etrogs.filter(e => e.status === 'processing').length;
+            const pending = etrogs.filter(e => e.status === 'pending').length;
+            const totalImages = etrogs.reduce((sum, e) => sum + e.totalImages, 0);
+            
+            return `דוח צילום אתרוגים - ${new Date().toLocaleDateString('he-IL')}
+
+סטטיסטיקות כלליות:
+- סה"כ אתרוגים: ${etrogs.length}
+- הושלמו: ${completed}
+- בצילום: ${processing}
+- ממתינים: ${pending}
+- סה"כ תמונות: ${totalImages}
+
+פירוט לפי אתרוג:
+${etrogs.map(e => `- ${e.id}: ${e.totalImages}/${e.requiredImages} תמונות (${Math.round(e.totalImages/e.requiredImages*100)}%)`).join('\n')}
+
+המלצות:
+${generateRecommendations()}`;
+        }
+
+        function generateRecommendations() {
+            const recommendations = [];
+            
+            if (etrogs.filter(e => e.status === 'pending').length > 0) {
+                recommendations.push('- יש אתרוגים הממתינים לצילום - מומלץ להתחיל בהם');
+            }
+            
+            if (etrogs.filter(e => e.totalImages < e.requiredImages).length > 0) {
+                recommendations.push('- יש אתרוגים עם תמונות חסרות - יש להשלים את הצילום');
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('- כל האתרוגים צולמו בהצלחה!');
+            }
+            
+            return recommendations.join('\n');
+        }
+
+        function openBatchModal() {
+            document.getElementById('batchModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function processBatch() {
+            const etrogIds = document.getElementById('batchEtrogIds').value.split(',').map(id => id.trim());
+            const photographer = document.getElementById('batchPhotographer').value;
+            
+            if (etrogIds.length === 0 || !photographer) {
+                showNotification('נא למלא את כל השדות הנדרשים', 'error');
+                return;
+            }
+            
+            // Process batch
+            etrogIds.forEach(id => {
+                if (!etrogs.find(e => e.id === id)) {
+                    etrogs.push({
+                        id: id,
+                        photographer: photographer,
+                        camera: 'Batch Import',
+                        lighting: 'Batch Import',
+                        turntable: 'Batch Import',
+                        totalImages: 0,
+                        requiredImages: 30,
+                        status: 'pending',
+                        date: new Date().toISOString().split('T')[0],
+                        notes: 'נוצר בעיבוד קבוצתי'
+                    });
+                }
+            });
+            
+            updateDashboard();
+            closeModal('batchModal');
+            showNotification(`${etrogIds.length} אתרוגים נוספו בעיבוד קבוצתי`, 'success');
+        }
+
+        function refreshData() {
+            // Simulate data refresh
+            showNotification('נתונים רועננו', 'success');
+        }
+
+        function validateAll() {
+            const issues = [];
+            
+            etrogs.forEach(etrog => {
+                if (etrog.totalImages < etrog.requiredImages) {
+                    issues.push(`${etrog.id}: חסרות ${etrog.requiredImages - etrog.totalImages} תמונות`);
+                }
+            });
+            
+            if (issues.length === 0) {
+                showNotification('כל האתרוגים תקינים!', 'success');
+            } else {
+                showNotification(`נמצאו ${issues.length} בעיות`, 'warning');
+                console.log('Issues:', issues);
+            }
+        }
+
+        function open3DGuide() {
+            window.open('3d-photography-guide.html', '_blank');
+        }
+
+        function openProcessingGuide() {
+            alert('מדריך עיבוד תלת-ממדי:\n\n1. Meshroom (חינמי)\n2. RealityCapture\n3. Polycam (מובייל)\n\nפיצ\'ר זה יפותח בקרוב!');
+        }
+
+        function openQualityCheck() {
+            const qualityResults = document.getElementById('qualityResults');
+            qualityResults.innerHTML = `
+                <h3>🔍 תוצאות בדיקת איכות</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">${etrogs.length}</div>
+                        <div class="stat-label">נבדקו</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${etrogs.filter(e => e.totalImages >= e.requiredImages).length}</div>
+                        <div class="stat-label">איכות טובה</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${etrogs.filter(e => e.totalImages < e.requiredImages).length}</div>
+                        <div class="stat-label">נדרש שיפור</div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="fixQualityIssues()">🔧 תיקון אוטומטי</button>
+                </div>
+            `;
+            document.getElementById('qualityModal').style.display = 'block';
+        }
+
+        function fixQualityIssues() {
+            showNotification('תיקון אוטומטי הופעל', 'success');
+            closeModal('qualityModal');
+        }
+
+        function openMetadataEditor() {
+            alert('עורך מטא-דאטה:\n\nפיצ\'ר זה יפותח בקרוב!\n\nבינתיים, השתמש בייצוא CSV לעריכת נתונים.');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

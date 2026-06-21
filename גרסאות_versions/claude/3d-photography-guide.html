@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדריך צילום תלת-ממדי לאתרוגים - בודק אתרוגים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .guide-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .guide-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-right: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateX(-5px);
+        }
+
+        .step h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .equipment-item {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #bdc3c7;
+        }
+
+        .equipment-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .equipment-item p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .camera-overlay {
+            position: relative;
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .etrog-model {
+            width: 150px;
+            height: 200px;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            margin: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .camera-indicator {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .angle-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .angle-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .angle-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .angle-btn.active {
+            background: #e74c3c;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .tips-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .tip {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tip h4 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .tip p {
+            color: #856404;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 מדריך צילום תלת-ממדי לאתרוגים</h1>
+            <p>מערכת מקצועית לצילום, תיעוד וניתוח אתרוגים בזמן אמת</p>
+        </div>
+
+        <div class="main-content">
+            <div class="guide-section">
+                <h2>🧰 ציוד נדרש</h2>
+                <div class="equipment-grid">
+                    <div class="equipment-item">
+                        <h4>📱 מצלמה</h4>
+                        <p>סמארטפון איכותי (iPhone 12+, Samsung S21+) או DSLR</p>
+                    </div>
+                    <div class="equipment-item">
+                        <h4>🔄 פלטפורמה מסתובבת</h4>
+                        <p>טרנטייבל חשמלי 360° או צלחת עוגה עם סיבוב ידני</p>
+                    </div>
+                    <div class="equipment-item">
+                        <h4>💡 תאורה</h4>
+                        <p>2 מקורות אור רכים (Softbox או LED עם נייר פרגמנט)</p>
+                    </div>
+                    <div class="equipment-item">
+                        <h4>📏 סרגל מדידה</h4>
+                        <p>סרגל מתכתי או מד זווית דיגיטלי לסקאלה הלכתית</p>
+                    </div>
+                    <div class="equipment-item">
+                        <h4>🎯 רקע</h4>
+                        <p>בריסטול לבן או שחור (A1) ללא טקסטורות</p>
+                    </div>
+                    <div class="equipment-item">
+                        <h4>📐 טריפוד</h4>
+                        <p>יציב עם ראש מתכוונן למניעת רעידות</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <h2>📐 הדרכה ויזואלית</h2>
+                <div class="camera-overlay">
+                    <div class="etrog-model" id="etrogModel">
+                        <div class="camera-indicator" id="cameraIndicator" style="top: -20px; left: 50%; transform: translateX(-50%);">📷</div>
+                    </div>
+                </div>
+                
+                <div class="angle-controls">
+                    <button class="angle-btn" onclick="setAngle(0)">0°</button>
+                    <button class="angle-btn" onclick="setAngle(45)">45°</button>
+                    <button class="angle-btn" onclick="setAngle(90)">90°</button>
+                    <button class="angle-btn" onclick="setAngle(135)">135°</button>
+                    <button class="angle-btn" onclick="setAngle(180)">180°</button>
+                    <button class="angle-btn" onclick="setAngle(225)">225°</button>
+                    <button class="angle-btn" onclick="setAngle(270)">270°</button>
+                    <button class="angle-btn" onclick="setAngle(315)">315°</button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="photosTaken">0</div>
+                        <div class="stat-label">תמונות צולמו</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="anglesCovered">0</div>
+                        <div class="stat-label">זוויות כוסו</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="timeElapsed">0:00</div>
+                        <div class="stat-label">זמן שחלף</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2>📋 שלבי הצילום</h2>
+            <div class="step">
+                <h3><span class="step-number">1</span>הכנת סטודיו</h3>
+                <p>הכן את כל הציוד, וודא תאורה אחידה, רקע נקי ופלטפורמה יציבה</p>
+            </div>
+            <div class="step">
+                <h3><span class="step-number">2</span>מיקום אתרוג</h3>
+                <p>הנח את האתרוג על הפלטפורמה כך שהפיטם פונה למעלה</p>
+            </div>
+            <div class="step">
+                <h3><span class="step-number">3</span>צילום 360°</h3>
+                <p>צלם כל 15° (24 תמונות) בסיבוב מלא סביב האתרוג</p>
+            </div>
+            <div class="step">
+                <h3><span class="step-number">4</span>זוויות משלימות</h3>
+                <p>צלם פיטם (90°), צד (0°), עוקץ (270°) וזווית אלכסונית (45°)</p>
+            </div>
+            <div class="step">
+                <h3><span class="step-number">5</span>בדיקת איכות</h3>
+                <p>וודא שכל התמונות חדות, מוארות היטב ומכסות את כל הזוויות</p>
+            </div>
+            <div class="step">
+                <h3><span class="step-number">6</span>עיבוד תלת-ממדי</h3>
+                <p>העלה את התמונות לתוכנת Meshroom או RealityCapture לעיבוד</p>
+            </div>
+        </div>
+
+        <div class="tips-section">
+            <h2>💡 טיפים מקצועיים</h2>
+            <div class="tip">
+                <h4>🎯 תאורה אחידה</h4>
+                <p>וודא שאין צללים חדשים על האתרוג. השתמש בשני מקורות אור מנוגדים</p>
+            </div>
+            <div class="tip">
+                <h4>📏 סקאלה מדויקת</h4>
+                <p>שים סרגל מדידה ליד האתרוג לכל התייחסות הלכתית עתידית</p>
+            </div>
+            <div class="tip">
+                <h4>🔄 סיבוב איטי</h4>
+                <p>סובב את הפלטפורמה לאט ובקצב אחיד למניעת רעידות</p>
+            </div>
+            <div class="tip">
+                <h4>📱 איכות תמונה</h4>
+                <p>השתמש ברזולוציה גבוהה (12MP+) ופוקוס ידני אם נדרש</p>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="startPhotography()">🎬 התחל צילום</button>
+            <button class="btn btn-secondary" onclick="downloadGuide()">📥 הורד מדריך PDF</button>
+            <button class="btn btn-success" onclick="open3DViewer()">🔍 צפייה תלת-ממדית</button>
+            <a href="../../index.html" class="btn btn-secondary">�� חזרה לדף הבית</a>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 בודק אתרוגים - מערכת צילום תלת-ממדי מקצועית</p>
+            <p>לשאלות ותמיכה: <a href="mailto:support@etrog-checker.com">support@etrog-checker.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        let currentAngle = 0;
+        let photosTaken = 0;
+        let startTime = null;
+        let timer = null;
+
+        function setAngle(angle) {
+            currentAngle = angle;
+            updateCameraPosition(angle);
+            updateAngleButtons(angle);
+        }
+
+        function updateCameraPosition(angle) {
+            const indicator = document.getElementById('cameraIndicator');
+            const etrog = document.getElementById('etrogModel');
+            
+            // Calculate position based on angle
+            const radius = 100;
+            const radian = (angle * Math.PI) / 180;
+            const x = Math.cos(radian) * radius;
+            const y = Math.sin(radian) * radius;
+            
+            indicator.style.left = `calc(50% + ${x}px)`;
+            indicator.style.top = `calc(50% + ${y}px)`;
+            indicator.style.transform = 'translate(-50%, -50%)';
+            
+            // Update indicator text
+            indicator.textContent = `${angle}°`;
+        }
+
+        function updateAngleButtons(activeAngle) {
+            const buttons = document.querySelectorAll('.angle-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.textContent) === activeAngle) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function startPhotography() {
+            if (!startTime) {
+                startTime = Date.now();
+                timer = setInterval(updateTimer, 1000);
+            }
+            
+            photosTaken++;
+            document.getElementById('photosTaken').textContent = photosTaken;
+            
+            // Update progress
+            const progress = Math.min((photosTaken / 30) * 100, 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update angles covered
+            const anglesCovered = Math.min(photosTaken * 15, 360);
+            document.getElementById('anglesCovered').textContent = anglesCovered;
+            
+            // Show success message
+            showNotification(`תמונה ${photosTaken} צולמה בהצלחה! זווית: ${currentAngle}°`);
+        }
+
+        function updateTimer() {
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timeElapsed').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #2ecc71;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function downloadGuide() {
+            // Create a simple PDF-like download
+            const content = `
+                מדריך צילום תלת-ממדי לאתרוגים
+                
+                ציוד נדרש:
+                - מצלמה איכותית
+                - פלטפורמה מסתובבת
+                - תאורה אחידה
+                - רקע נקי
+                
+                שלבי הצילום:
+                1. הכנת סטודיו
+                2. מיקום אתרוג
+                3. צילום 360°
+                4. זוויות משלימות
+                5. בדיקת איכות
+                6. עיבוד תלת-ממדי
+            `;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'מדריך_צילום_תלת_ממדי.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function open3DViewer() {
+            alert('פתיחת צופה תלת-ממדי...\n\nפיצ\'ר זה יפותח בקרוב!\n\nבינתיים, השתמש בתוכנות:\n- Meshroom (חינמי)\n- RealityCapture\n- Polycam (מובייל)');
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        setAngle(0);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>איך להריץ את אפליקציית React (dev)</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f8fafc; margin:0; color:#0f172a; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.05); }
+    h1 { margin:0 0 8px; color:#0ea5e9; }
+    .nav { margin:12px 0 24px; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn { padding:8px 14px; border-radius:10px; text-decoration:none; border:1px solid #94a3b8; color:#0f172a; background:#f1f5f9; }
+    .btn:hover { background:#e2e8f0; }
+    ol { margin:0; padding-right: 20px; }
+    code, .mono { background:#0f172a; color:#e2e8f0; padding:2px 6px; border-radius:6px; font-family: Consolas, monospace; }
+    pre { background:#0f172a; color:#e2e8f0; padding:14px; border-radius:10px; overflow:auto; }
+    .tip { background:#ecfeff; border-right:4px solid #06b6d4; padding:12px; border-radius:10px; margin-top:14px; }
+    .topbar { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.9); backdrop-filter: blur(6px); border-bottom: 1px solid #e2e8f0; padding: 10px 16px; display:flex; gap:10px; justify-content: flex-end; }
+    .topbar a { color:#0f172a; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:18px; padding:6px 12px; text-decoration:none; }
+    .topbar a:hover { background:#e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="../index.html">🏠 בית</a>
+    <a href="../versions-overview.html">📚 קבצים</a>
+    <a href="./RUN.html">⚛️ הרצה</a>
+    <a href="../מסמכים_docs/about.html">ℹ️ מידע</a>
+  </div>
+  <div class="container">
+    <div class="card">
+      <h1>איך להריץ את אפליקציית React (תיקיית dev)</h1>
+      <p>להרצה מקומית של האפליקציה המתקדמת (React + Vite):</p>
+      <ol>
+        <li>פתח חלון PowerShell בתיקייה הראשית של הפרויקט.</li>
+        <li>הפעל את הפקודות הבאות:</li>
+      </ol>
+      <pre>cd פיתוח_dev
+npm install
+npm run dev</pre>
+      <p>לאחר ההרצה הופיע קישור, למשל <span class="mono">http://localhost:5173</span>. פתח אותו בדפדפן.</p>
+      <div class="tip">
+        אם זו הפעם הראשונה, ההתקנה עלולה לקחת מספר דקות. אם יש שגיאה, נסה <code>npm cache clean --force</code> ואז שוב <code>npm install</code>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת בקרת איכות - בודק אתרוגים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .quality-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .quality-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .image-upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .image-upload-area:hover {
+            border-color: #2980b9;
+            background: #e3f2fd;
+        }
+
+        .image-upload-area.dragover {
+            border-color: #2ecc71;
+            background: #e8f5e8;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #95a5a6;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .quality-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card.pass {
+            border-color: #2ecc71;
+            background: #d4edda;
+        }
+
+        .metric-card.fail {
+            border-color: #e74c3c;
+            background: #f8d7da;
+        }
+
+        .metric-card.warning {
+            border-color: #f39c12;
+            background: #fff3cd;
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .metric-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-status {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .pass .metric-status {
+            color: #155724;
+        }
+
+        .fail .metric-status {
+            color: #721c24;
+        }
+
+        .warning .metric-status {
+            color: #856404;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .overall-score {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .score-number {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .score-label {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .score-description {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .recommendations {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .recommendation-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-right: 4px solid #3498db;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-text {
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .progress-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 10px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #2ecc71;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.warning {
+            background: #f39c12;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .quality-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 מערכת בקרת איכות צילום</h1>
+            <p>בדיקה אוטומטית של איכות תמונות אתרוגים</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="quality-section">
+                <h2>📸 העלאת תמונה לבדיקה</h2>
+                
+                <div class="image-upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">גרור תמונה לכאן או לחץ לבחירה</div>
+                    <div class="upload-hint">תמונות JPG, PNG עד 10MB</div>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </div>
+
+                <img id="imagePreview" class="image-preview" style="display: none;">
+
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="analyzeImage()">🔍 בדוק איכות</button>
+                    <button class="btn btn-warning" onclick="resetAnalysis()">🔄 איפוס</button>
+                    <button class="btn btn-success" onclick="saveResults()">💾 שמור תוצאות</button>
+                </div>
+            </div>
+
+            <div class="quality-section">
+                <h2>📊 מדדי איכות</h2>
+                
+                <div class="quality-metrics" id="qualityMetrics">
+                    <div class="metric-card" id="brightnessCard">
+                        <div class="metric-icon">☀️</div>
+                        <div class="metric-title">תאורה</div>
+                        <div class="metric-value" id="brightnessValue">--</div>
+                        <div class="metric-status" id="brightnessStatus">ממתין לבדיקה</div>
+                    </div>
+
+                    <div class="metric-card" id="contrastCard">
+                        <div class="metric-icon">🎨</div>
+                        <div class="metric-title">ניגודיות</div>
+                        <div class="metric-value" id="contrastValue">--</div>
+                        <div class="metric-status" id="contrastStatus">ממתין לבדיקה</div>
+                    </div>
+
+                    <div class="metric-card" id="sharpnessCard">
+                        <div class="metric-icon">🔍</div>
+                        <div class="metric-title">חדות</div>
+                        <div class="metric-value" id="sharpnessValue">--</div>
+                        <div class="metric-status" id="sharpnessStatus">ממתין לבדיקה</div>
+                    </div>
+
+                    <div class="metric-card" id="noiseCard">
+                        <div class="metric-icon">📱</div>
+                        <div class="metric-title">רעש</div>
+                        <div class="metric-value" id="noiseValue">--</div>
+                        <div class="metric-status" id="noiseStatus">ממתין לבדיקה</div>
+                    </div>
+
+                    <div class="metric-card" id="backgroundCard">
+                        <div class="metric-icon">🖼️</div>
+                        <div class="metric-title">רקע</div>
+                        <div class="metric-value" id="backgroundValue">--</div>
+                        <div class="metric-status" id="backgroundStatus">ממתין לבדיקה</div>
+                    </div>
+
+                    <div class="metric-card" id="compositionCard">
+                        <div class="metric-icon">📐</div>
+                        <div class="metric-title">קומפוזיציה</div>
+                        <div class="metric-value" id="compositionValue">--</div>
+                        <div class="metric-status" id="compositionStatus">ממתין לבדיקה</div>
+                    </div>
+                </div>
+
+                <div class="overall-score" id="overallScore" style="display: none;">
+                    <div class="score-number" id="scoreNumber">0</div>
+                    <div class="score-label" id="scoreLabel">איכות כללית</div>
+                    <div class="score-description" id="scoreDescription">ממתין לבדיקה</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations" id="recommendations" style="display: none;">
+            <h2>💡 המלצות לשיפור</h2>
+            <div id="recommendationsList">
+                <!-- Recommendations will be added here -->
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <h2>📈 התקדמות איכות</h2>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% - ממתין לבדיקה</div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="batchAnalyze()">📦 בדיקה קבוצתית</button>
+                <button class="btn btn-success" onclick="exportReport()">📊 ייצא דוח</button>
+                <button class="btn btn-warning" onclick="viewHistory()">📋 היסטוריית בדיקות</button>
+                <a href="face-detection-system.html" class="btn btn-danger">🚫 בדיקת פנים</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 בודק אתרוגים - מערכת בקרת איכות מתקדמת</p>
+            <p>לשאלות ותמיכה: <a href="mailto:support@etrog-checker.com">support@etrog-checker.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentImage = null;
+        let analysisResults = {};
+        let qualityHistory = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupImageUpload();
+            loadQualityHistory();
+        });
+
+        // Setup image upload
+        function setupImageUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const imageInput = document.getElementById('imageInput');
+
+            uploadArea.addEventListener('click', () => imageInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('drop', handleDrop);
+            imageInput.addEventListener('change', handleImageSelect);
+        }
+
+        // Handle drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.add('dragover');
+        }
+
+        // Handle drop
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                loadImage(files[0]);
+            }
+        }
+
+        // Handle image select
+        function handleImageSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        }
+
+        // Load image
+        function loadImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('אנא בחר קובץ תמונה', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('קובץ גדול מדי (מקסימום 10MB)', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    currentImage = img;
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    showNotification('תמונה נטענה בהצלחה', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Analyze image quality
+        function analyzeImage() {
+            if (!currentImage) {
+                showNotification('אנא העלה תמונה תחילה', 'warning');
+                return;
+            }
+
+            // Create canvas for analysis
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            ctx.drawImage(currentImage, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Analyze brightness
+            const brightness = analyzeBrightness(data);
+            updateMetric('brightness', brightness, 'תאורה');
+
+            // Analyze contrast
+            const contrast = analyzeContrast(data);
+            updateMetric('contrast', contrast, 'ניגודיות');
+
+            // Analyze sharpness
+            const sharpness = analyzeSharpness(imageData);
+            updateMetric('sharpness', sharpness, 'חדות');
+
+            // Analyze noise
+            const noise = analyzeNoise(data);
+            updateMetric('noise', noise, 'רעש');
+
+            // Analyze background
+            const background = analyzeBackground(imageData);
+            updateMetric('background', background, 'רקע');
+
+            // Analyze composition
+            const composition = analyzeComposition(imageData);
+            updateMetric('composition', composition, 'קומפוזיציה');
+
+            // Calculate overall score
+            calculateOverallScore();
+
+            // Show recommendations
+            showRecommendations();
+
+            // Update progress
+            updateProgress();
+
+            // Save to history
+            saveToHistory();
+
+            showNotification('בדיקת איכות הושלמה', 'success');
+        }
+
+        // Analyze brightness
+        function analyzeBrightness(data) {
+            let total = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                total += (r + g + b) / 3;
+            }
+            const average = total / (data.length / 4);
+            return Math.round(average);
+        }
+
+        // Analyze contrast
+        function analyzeContrast(data) {
+            let min = 255;
+            let max = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+                min = Math.min(min, brightness);
+                max = Math.max(max, brightness);
+            }
+            return Math.round(max - min);
+        }
+
+        // Analyze sharpness
+        function analyzeSharpness(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+            let totalGradient = 0;
+            let count = 0;
+
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = (y * width + x) * 4;
+                    const current = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+                    const right = (data[idx + 4] + data[idx + 5] + data[idx + 6]) / 3;
+                    const bottom = (data[idx + width * 4] + data[idx + width * 4 + 1] + data[idx + width * 4 + 2]) / 3;
+                    
+                    const gradientX = Math.abs(current - right);
+                    const gradientY = Math.abs(current - bottom);
+                    totalGradient += Math.sqrt(gradientX * gradientX + gradientY * gradientY);
+                    count++;
+                }
+            }
+
+            return Math.round(totalGradient / count);
+        }
+
+        // Analyze noise
+        function analyzeNoise(data) {
+            let totalVariation = 0;
+            let count = 0;
+
+            for (let i = 4; i < data.length - 4; i += 4) {
+                const current = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                const prev = (data[i - 4] + data[i - 3] + data[i - 2]) / 3;
+                const variation = Math.abs(current - prev);
+                totalVariation += variation;
+                count++;
+            }
+
+            return Math.round(totalVariation / count);
+        }
+
+        // Analyze background
+        function analyzeBackground(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+            
+            // Check edges for background uniformity
+            let edgePixels = [];
+            
+            // Top edge
+            for (let x = 0; x < width; x++) {
+                const idx = x * 4;
+                edgePixels.push([data[idx], data[idx + 1], data[idx + 2]]);
+            }
+            
+            // Bottom edge
+            for (let x = 0; x < width; x++) {
+                const idx = ((height - 1) * width + x) * 4;
+                edgePixels.push([data[idx], data[idx + 1], data[idx + 2]]);
+            }
+
+            // Calculate background uniformity
+            let totalVariation = 0;
+            for (let i = 1; i < edgePixels.length; i++) {
+                const prev = edgePixels[i - 1];
+                const curr = edgePixels[i];
+                const variation = Math.abs(prev[0] - curr[0]) + Math.abs(prev[1] - curr[1]) + Math.abs(prev[2] - curr[2]);
+                totalVariation += variation;
+            }
+
+            return Math.round(100 - (totalVariation / edgePixels.length));
+        }
+
+        // Analyze composition
+        function analyzeComposition(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // Check aspect ratio
+            const aspectRatio = width / height;
+            let compositionScore = 100;
+            
+            // Penalize extreme aspect ratios
+            if (aspectRatio < 0.5 || aspectRatio > 2) {
+                compositionScore -= 20;
+            }
+            
+            // Check if image is too small
+            if (width < 800 || height < 600) {
+                compositionScore -= 30;
+            }
+            
+            return Math.max(0, compositionScore);
+        }
+
+        // Update metric display
+        function updateMetric(type, value, title) {
+            const card = document.getElementById(type + 'Card');
+            const valueElement = document.getElementById(type + 'Value');
+            const statusElement = document.getElementById(type + 'Status');
+            
+            valueElement.textContent = value;
+            
+            let status, className;
+            
+            switch(type) {
+                case 'brightness':
+                    if (value < 50) {
+                        status = 'כהה מדי';
+                        className = 'fail';
+                    } else if (value > 200) {
+                        status = 'בהיר מדי';
+                        className = 'fail';
+                    } else if (value < 80 || value > 170) {
+                        status = 'שיפור נדרש';
+                        className = 'warning';
+                    } else {
+                        status = 'מעולה';
+                        className = 'pass';
+                    }
+                    break;
+                    
+                case 'contrast':
+                    if (value < 50) {
+                        status = 'נמוך מדי';
+                        className = 'fail';
+                    } else if (value > 200) {
+                        status = 'גבוה מדי';
+                        className = 'fail';
+                    } else if (value < 80 || value > 150) {
+                        status = 'שיפור נדרש';
+                        className = 'warning';
+                    } else {
+                        status = 'מעולה';
+                        className = 'pass';
+                    }
+                    break;
+                    
+                case 'sharpness':
+                    if (value < 10) {
+                        status = 'מטושטש';
+                        className = 'fail';
+                    } else if (value < 20) {
+                        status = 'שיפור נדרש';
+                        className = 'warning';
+                    } else {
+                        status = 'חד';
+                        className = 'pass';
+                    }
+                    break;
+                    
+                case 'noise':
+                    if (value > 15) {
+                        status = 'רעש גבוה';
+                        className = 'fail';
+                    } else if (value > 8) {
+                        status = 'רעש בינוני';
+                        className = 'warning';
+                    } else {
+                        status = 'נקי';
+                        className = 'pass';
+                    }
+                    break;
+                    
+                case 'background':
+                    if (value < 60) {
+                        status = 'רקע לא אחיד';
+                        className = 'fail';
+                    } else if (value < 80) {
+                        status = 'שיפור נדרש';
+                        className = 'warning';
+                    } else {
+                        status = 'אחיד';
+                        className = 'pass';
+                    }
+                    break;
+                    
+                case 'composition':
+                    if (value < 60) {
+                        status = 'קומפוזיציה גרועה';
+                        className = 'fail';
+                    } else if (value < 80) {
+                        status = 'שיפור נדרש';
+                        className = 'warning';
+                    } else {
+                        status = 'מעולה';
+                        className = 'pass';
+                    }
+                    break;
+            }
+            
+            statusElement.textContent = status;
+            card.className = 'metric-card ' + className;
+            
+            analysisResults[type] = { value, status, className };
+        }
+
+        // Calculate overall score
+        function calculateOverallScore() {
+            const scores = Object.values(analysisResults);
+            let totalScore = 0;
+            let passCount = 0;
+            
+            scores.forEach(result => {
+                if (result.className === 'pass') {
+                    totalScore += 100;
+                    passCount++;
+                } else if (result.className === 'warning') {
+                    totalScore += 70;
+                } else {
+                    totalScore += 30;
+                }
+            });
+            
+            const averageScore = Math.round(totalScore / scores.length);
+            
+            document.getElementById('scoreNumber').textContent = averageScore;
+            document.getElementById('overallScore').style.display = 'block';
+            
+            if (averageScore >= 85) {
+                document.getElementById('scoreLabel').textContent = 'איכות מעולה';
+                document.getElementById('scoreDescription').textContent = 'התמונה מתאימה לצילום אתרוגים';
+            } else if (averageScore >= 70) {
+                document.getElementById('scoreLabel').textContent = 'איכות טובה';
+                document.getElementById('scoreDescription').textContent = 'שיפורים קלים נדרשים';
+            } else {
+                document.getElementById('scoreLabel').textContent = 'איכות נמוכה';
+                document.getElementById('scoreDescription').textContent = 'צילום מחדש מומלץ';
+            }
+        }
+
+        // Show recommendations
+        function showRecommendations() {
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            
+            const recommendations = [];
+            
+            if (analysisResults.brightness?.className === 'fail' || analysisResults.brightness?.className === 'warning') {
+                recommendations.push({
+                    title: 'שיפור תאורה',
+                    text: 'הוסף תאורה אחידה או שנה את זווית הצילום לקבלת תאורה מאוזנת יותר'
+                });
+            }
+            
+            if (analysisResults.sharpness?.className === 'fail' || analysisResults.sharpness?.className === 'warning') {
+                recommendations.push({
+                    title: 'שיפור חדות',
+                    text: 'וודא שהמצלמה בפוקוס או השתמש בטריפוד למניעת רעידות'
+                });
+            }
+            
+            if (analysisResults.background?.className === 'fail' || analysisResults.background?.className === 'warning') {
+                recommendations.push({
+                    title: 'שיפור רקע',
+                    text: 'השתמש ברקע אחיד ונטול חפצים או אנשים'
+                });
+            }
+            
+            if (analysisResults.noise?.className === 'fail' || analysisResults.noise?.className === 'warning') {
+                recommendations.push({
+                    title: 'הפחתת רעש',
+                    text: 'השתמש ב-ISO נמוך יותר או תאורה טובה יותר'
+                });
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push({
+                    title: 'איכות מעולה',
+                    text: 'התמונה עומדת בכל הקריטריונים. המשך באותה צורה!'
+                });
+            }
+            
+            recommendations.forEach(rec => {
+                const item = document.createElement('div');
+                item.className = 'recommendation-item';
+                item.innerHTML = `
+                    <div class="recommendation-title">${rec.title}</div>
+                    <div class="recommendation-text">${rec.text}</div>
+                `;
+                recommendationsList.appendChild(item);
+            });
+            
+            document.getElementById('recommendations').style.display = 'block';
+        }
+
+        // Update progress
+        function updateProgress() {
+            const scores = Object.values(analysisResults);
+            const passCount = scores.filter(result => result.className === 'pass').length;
+            const progress = Math.round((passCount / scores.length) * 100);
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${progress}% - ${passCount}/${scores.length} קריטריונים עברו`;
+        }
+
+        // Save to history
+        function saveToHistory() {
+            const timestamp = new Date().toISOString();
+            const entry = {
+                timestamp,
+                score: document.getElementById('scoreNumber').textContent,
+                results: analysisResults
+            };
+            
+            qualityHistory.push(entry);
+            localStorage.setItem('qualityHistory', JSON.stringify(qualityHistory));
+        }
+
+        // Load quality history
+        function loadQualityHistory() {
+            const saved = localStorage.getItem('qualityHistory');
+            if (saved) {
+                qualityHistory = JSON.parse(saved);
+            }
+        }
+
+        // Reset analysis
+        function resetAnalysis() {
+            currentImage = null;
+            analysisResults = {};
+            
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('overallScore').style.display = 'none';
+            document.getElementById('recommendations').style.display = 'none';
+            
+            // Reset all metric cards
+            const cards = document.querySelectorAll('.metric-card');
+            cards.forEach(card => {
+                card.className = 'metric-card';
+                const valueElement = card.querySelector('.metric-value');
+                const statusElement = card.querySelector('.metric-status');
+                valueElement.textContent = '--';
+                statusElement.textContent = 'ממתין לבדיקה';
+            });
+            
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '0% - ממתין לבדיקה';
+            
+            showNotification('הבדיקה אופסה', 'warning');
+        }
+
+        // Save results
+        function saveResults() {
+            if (Object.keys(analysisResults).length === 0) {
+                showNotification('אין תוצאות לשמירה', 'warning');
+                return;
+            }
+            
+            const data = {
+                timestamp: new Date().toISOString(),
+                results: analysisResults,
+                score: document.getElementById('scoreNumber').textContent
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quality_analysis.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('תוצאות נשמרו בהצלחה', 'success');
+        }
+
+        // Batch analyze
+        function batchAnalyze() {
+            showNotification('פונקציה זו תתווסף בגרסה הבאה', 'info');
+        }
+
+        // Export report
+        function exportReport() {
+            if (qualityHistory.length === 0) {
+                showNotification('אין היסטוריה לייצוא', 'warning');
+                return;
+            }
+            
+            const report = {
+                generated: new Date().toISOString(),
+                totalAnalyses: qualityHistory.length,
+                averageScore: Math.round(qualityHistory.reduce((sum, entry) => sum + parseInt(entry.score), 0) / qualityHistory.length),
+                history: qualityHistory
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quality_report.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('דוח יוצא בהצלחה', 'success');
+        }
+
+        // View history
+        function viewHistory() {
+            if (qualityHistory.length === 0) {
+                showNotification('אין היסטוריית בדיקות', 'info');
+                return;
+            }
+            
+            const historyText = qualityHistory.map(entry => 
+                `${new Date(entry.timestamp).toLocaleString()}: ציון ${entry.score}`
+            ).join('\n');
+            
+            alert('היסטוריית בדיקות:\n\n' + historyText);
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html> 

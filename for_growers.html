@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍋 פתרון חכם למגדלי אתרוגים</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f0fdf4 0%, #fef9c3 100%);
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+      color: #1e293b;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 2.7rem;
+      color: #059669;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: #475569;
+      font-size: 1.2rem;
+    }
+    .intro {
+      background: #e0f2fe;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 30px;
+      color: #0e7490;
+      font-size: 1.08rem;
+      text-align: center;
+    }
+    .nav {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .nav a {
+      color: #2563eb;
+      background: #f1f5f9;
+      border-radius: 20px;
+      padding: 8px 22px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .nav a:hover {
+      background: #dbeafe;
+    }
+    .section {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(16,185,129,0.08);
+      margin-bottom: 30px;
+      padding: 28px 24px;
+    }
+    .section h2 {
+      color: #2563eb;
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+    .section ul {
+      padding-right: 20px;
+      margin: 0;
+    }
+    .section li {
+      margin-bottom: 10px;
+      font-size: 1.08rem;
+    }
+    .highlight {
+      background: linear-gradient(90deg, #fef08a 60%, #bbf7d0 100%);
+      border-radius: 8px;
+      padding: 8px 14px;
+      display: inline-block;
+      font-weight: bold;
+      color: #b45309;
+      margin-bottom: 10px;
+    }
+    .cta {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .cta-btn {
+      background: linear-gradient(90deg, #059669, #f59e42);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 18px 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.12);
+      transition: background 0.2s, transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .cta-btn:hover {
+      background: linear-gradient(90deg, #10b981, #fbbf24);
+      transform: translateY(-2px) scale(1.04);
+    }
+    .topbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      gap: 10px;
+      border-radius: 14px; flex-wrap: wrap; box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .topbar a {
+      color: #2563eb;
+      background: #f1f5f9;
+      border-radius: 18px;
+      padding: 6px 12px;
+      text-decoration: none;
+      border: 1px solid #cbd5e1; transition: background .2s ease, transform .15s ease;
+    }
+    .topbar a:hover, .topbar a:focus-visible { background:#e2e8f0; transform: translateY(-1px); outline: none; }
+    @media (max-width: 600px) {
+      .container { padding: 15px; }
+      .header h1 { font-size: 2rem; }
+      .section { padding: 16px 8px; }
+      .nav { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">🏠 בית</a>
+    <a href="start.html">✅ התחל בדיקה</a>
+    <a href="versions-overview.html">📚 קבצים</a>
+    <a href="מסמכים_docs/about.html">ℹ️ מידע</a>
+  </div>
+  <div class="container">
+    <div class="header">
+      <h1>🍋 פתרון חכם למגדלי אתרוגים</h1>
+      <p>מערכת אוטומטית לזיהוי, מיון ותמחור אתרוגים – חוסכת זמן, כסף וכוח אדם</p>
+    </div>
+    <div class="intro">
+      דף זה מיועד במיוחד למגדלי אתרוגים, משווקים וסוחרים שרוצים לחסוך בעלויות, לשפר את איכות המיון, ולהגדיל רווחיות בעזרת טכנולוגיה מתקדמת. כאן תמצאו את כל היתרונות, אפשרות לפיילוט, ותשובות לכל השאלות.
+    </div>
+    
+
+    <div class="section">
+      <div class="highlight">למי זה מתאים?</div>
+      <ul>
+        <li>מגדלי אתרוגים בכל סדר גודל</li>
+        <li>משווקים, ממיינים, סוחרים</li>
+        <li>כל מי שרוצה לחסוך בעלויות ולשפר את איכות האתרוגים</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>💸 חיסכון אדיר בכסף וכוח אדם</h2>
+      <ul>
+        <li>אין צורך לשלם לממיינים 100 ש"ח לשעה – המערכת עושה את העבודה!</li>
+        <li>מיון אוטומטי לפי איכות, זן, פגמים, צבע, פיטם ועוד</li>
+        <li>הפחתת טעויות אנוש – תוצאות מדויקות ואובייקטיביות</li>
+        <li>אפשרות למיון אלפי אתרוגים ביום</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🔍 זיהוי פגמים ותיעוד מלא</h2>
+      <ul>
+        <li>זיהוי בלטלך (נקודות שחורות) – פסול או כשר</li>
+        <li>הבדלה בין רסיסוס (נקודות חומות, כשר) לבלטלך (פסול)</li>
+        <li>בדיקת פיטם, שלמות, צבע, סימטריה, גודל</li>
+        <li>צילום מכמה זוויות – תיעוד לכל אתרוג</li>
+        <li>הפקת דוח אוטומטי לכל אתרוג (PDF/JSON)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>📈 תמחור אוטומטי ודוחות</h2>
+      <ul>
+        <li>הערכת מחיר לכל אתרוג לפי איכות, זן, נדירות ויופי</li>
+        <li>דוחות מלאים: כמה אתרוגים יש, כמה מהודרים, כמה פסולים</li>
+        <li>מעקב אחרי כל אתרוג – היסטוריה, תמונות, תוצאות</li>
+        <li>ייצוא נתונים לאקסל/מערכת ניהול</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🤝 שיתוף פעולה ופיילוט</h2>
+      <ul>
+        <li>אפשרות לפיילוט חינם על האתרוגים שלך</li>
+        <li>התאמה אישית לצרכים של כל מגדל</li>
+        <li>שיתוף פעולה עם מומחים הלכתיים ומסחריים</li>
+        <li>תמיכה מלאה בעברית ובשפות נוספות</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>💡 פוטנציאל רווח אדיר</h2>
+      <ul>
+        <li>הגדלת רווחיות – פחות עובדים, יותר אתרוגים מהודרים</li>
+        <li>שיווק קל יותר – דוחות ותמונות לכל לקוח</li>
+        <li>אפשרות למכירה ישירה ללקוחות/סוחרים בארץ ובעולם</li>
+        <li>חדשנות – יתרון תחרותי בשוק</li>
+      </ul>
+    </div>
+
+    <div class="cta">
+      <p style="font-size:1.1rem; margin-bottom:18px; color:#059669;">רוצה להצטרף? לקבל פיילוט? לשמוע עוד?</p>
+      <a href="mailto:info@etrog-ai.com" class="cta-btn">דברו איתנו עכשיו!</a>
+    </div>
+  </div>
+</body>
+</html> 

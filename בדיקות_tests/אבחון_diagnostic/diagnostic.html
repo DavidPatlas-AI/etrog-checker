@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etrog Diagnostic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="diagnostic.css">
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="glass-card">
+      <div class="lang-switcher">
+        <select id="lang-select" aria-label="בחר שפה">
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="fr">Français</option>
+          <option value="th">ไทย</option>
+        </select>
+      </div>
+      <h1 class="main-title" data-i18n="title">בודק פגמים באתרוג</h1>
+      <p class="subtitle" data-i18n="subtitle">מערכת לזיהוי חזותי של פגמים באתרוגים</p>
+      <div class="instructions">
+        <span data-i18n="instructions">הנחיות:</span>
+        <ul>
+          <li data-i18n="ins1">צלם את האתרוג בתאורה טובה, על רקע אחיד.</li>
+          <li data-i18n="ins2">העלה תמונה ברורה של כל צדדי האתרוג.</li>
+          <li data-i18n="ins3">ניתן לגרור ולשחרר תמונה או ללחוץ על "העלה תמונה".</li>
+        </ul>
+      </div>
+      <div class="etrog-area">
+        <input type="file" id="etrog-upload" accept="image/*" style="display:none" aria-label="העלה תמונה של אתרוג לבדיקה">
+        <label for="etrog-upload" class="upload-label" tabindex="0">בחר/י תמונה</label>
+  <span class="upload-tooltip" aria-label="ניתן לגרור תמונה או ללחוץ" data-i18n="tooltip">🛈</span>
+  <div class="drag-hint" data-i18n="dragHint">ניתן לגרור תמונה לכאן</div>
+        <div class="file-name" id="file-name"></div>
+        <div class="etrog-preview" id="etrog-preview" aria-label="אזור תצוגת תמונה">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Etrog_%28yellow_citron%29.jpg/220px-Etrog_%28yellow_citron%29.jpg" alt="Etrog Example" class="example-img" aria-label="דוגמה לאתרוג" data-i18n-alt="exampleImg" />
+        </div>
+        <div class="loader" id="loader" style="display:none"></div>
+      </div>
+  <button data-i18n="checkBtn">בדוק שוב</button>
+      <div class="result-area">
+  <span class="result-label" data-i18n="resultLabel">תוצאה:</span>
+  <span class="result-icon" id="result-icon" aria-hidden="true"></span>
+  <span class="result-value">לא זוהו פגמים</span>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="diagnostic.js"></script>
+</head>
+</html>

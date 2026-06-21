@@ -1,0 +1,38 @@
+# Core image processing and math
+opencv-python
+scikit-image
+Pillow
+numpy
+scipy
+matplotlib
+seaborn
+colormath
+pandas
+scikit-learn
+
+# Deep learning (CPU by default)
+torch
+torchvision
+torchaudio
+ultralytics
+tensorflow
+keras
+albumentations
+torchcam
+captum
+
+# Explainability
+shap
+lime
+
+# Realtime / API / UI
+fastapi
+uvicorn
+streamlit
+
+# Rules / config
+pyyaml
+
+# Optional (install per platform): Detectron2
+# https://github.com/facebookresearch/detectron2
+

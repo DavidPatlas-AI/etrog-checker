@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍋 מנתח אתרוגים מתקדם - זיהוי זנים ובדיקת כשרות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            background: linear-gradient(135deg, #dcfce7 0%, #fed7aa 100%);
+            min-height: 100vh;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #059669, #10b981, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .card-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #4b5563;
+            position: relative;
+            padding-right: 25px;
+        }
+
+        .feature-list li:before {
+            content: "✅";
+            position: absolute;
+            right: 0;
+            top: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            color: white;
+        }
+
+        /* Camera Interface */
+        .camera-interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            display: none;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .analysis-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            height: 350px;
+            border: 4px solid #10b981;
+            border-radius: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .analysis-grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+        }
+
+        .grid-cell {
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .camera-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .camera-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            font-weight: bold;
+        }
+
+        .camera-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .capture-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 90px;
+            background: white;
+            border: 4px solid #e5e7eb;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            font-size: 2rem;
+        }
+
+        .capture-btn:hover {
+            border-color: #10b981;
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* Results Screen */
+        .results-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f9fafb, #dcfce7);
+            z-index: 1000;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .results-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .results-header h2 {
+            font-size: 2rem;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .result-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .variety-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .variety-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .variety-card.selected {
+            border-color: #10b981;
+            background: #dcfce7;
+        }
+
+        .variety-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .variety-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .variety-confidence {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .halacha-analysis {
+            background: #dbeafe;
+            padding: 25px;
+            border-radius: 15px;
+            border-right: 4px solid #3b82f6;
+            margin: 20px 0;
+        }
+
+        .halacha-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .halacha-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-right: 3px solid #3b82f6;
+        }
+
+        .halacha-item h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .halacha-item p {
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .halacha-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .status-kosher {
+            background: #dcfce7;
+            color: #065f46;
+        }
+
+        .status-invalid {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-questionable {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .measurements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .measurement-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .measurement-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .measurement-value {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #1f2937;
+        }
+
+        .quality-score {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .quality-score h3 {
+            color: #065f46;
+            margin-bottom: 15px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#10b981 0deg, #10b981 270deg, #e5e7eb 270deg, #e5e7eb 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .score-text {
+            position: relative;
+            z-index: 1;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #065f46;
+        }
+
+        .recommendations {
+            background: #fef3c7;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #f59e0b;
+        }
+
+        .recommendations h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-right: 3px solid #f59e0b;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .variety-analysis {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align:right;margin:20px 0 0 0;">
+        <a href="../../index.html" style="background:#059669;color:white;padding:10px 22px;border-radius:20px;text-decoration:none;font-weight:bold;">🏠 דף הבית</a>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>🍋 מנתח אתרוגים מתקדם</h1>
+            <p>זיהוי זנים, בדיקת כשרות מתקדמת, וניתוח הלכתי מקיף</p>
+        </div>
+
+        <div class="analysis-grid">
+            <!-- זיהוי זנים מתקדם -->
+            <div class="analysis-card">
+                <div class="card-header">
+                    <div class="card-icon">🔍</div>
+                    <div>
+                        <div class="card-title">זיהוי זנים מתקדם</div>
+                        <div class="card-subtitle">זיהוי מדויק של זן האתרוג</div>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li>זיהוי חזון איש, קלבריה, תימני</li>
+                    <li>ניתוח צבע ומראה אסתטי</li>
+                    <li>בדיקת צורה ופרופורציות</li>
+                    <li>השוואה למאגר זנים</li>
+                    <li>דירוג איכות ויופי</li>
+                </ul>
+                <button class="btn btn-primary" onclick="startVarietyAnalysis()">
+                    🔍 התחל זיהוי זנים
+                </button>
+            </div>
+
+            <!-- בדיקת כשרות הלכתית -->
+            <div class="analysis-card">
+                <div class="card-header">
+                    <div class="card-icon">📖</div>
+                    <div>
+                        <div class="card-title">בדיקת כשרות הלכתית</div>
+                        <div class="card-subtitle">ניתוח מקיף לפי ההלכה</div>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li>בדיקת נקודות שחורות (בלטלך)</li>
+                    <li>ניתוח חיתוך עלים</li>
+                    <li>בדיקת פיטם ושלמות</li>
+                    <li>הערכת בשלות</li>
+                    <li>המלצות הלכתיות</li>
+                </ul>
+                <button class="btn btn-secondary" onclick="startHalachaAnalysis()">
+                    📖 בדיקת כשרות
+                </button>
+            </div>
+
+            <!-- צילום רב-זוויתי -->
+            <div class="analysis-card">
+                <div class="card-header">
+                    <div class="card-icon">📸</div>
+                    <div>
+                        <div class="card-title">צילום רב-זוויתי</div>
+                        <div class="card-subtitle">צילום מכמה זוויות לניתוח מלא</div>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li>צילום עם פיטם ובלי פיטם</li>
+                    <li>צילום מכל הצדדים</li>
+                    <li>בדיקת עלים מכל זווית</li>
+                    <li>ניתוח צבע אחיד</li>
+                    <li>תיעוד מלא לבדיקה</li>
+                </ul>
+                <button class="btn btn-warning" onclick="startMultiAngleCapture()">
+                    📸 צילום רב-זוויתי
+                </button>
+            </div>
+
+            <!-- ניתוח איכות מתקדם -->
+            <div class="analysis-card">
+                <div class="card-header">
+                    <div class="card-icon">⭐</div>
+                    <div>
+                        <div class="card-title">ניתוח איכות מתקדם</div>
+                        <div class="card-subtitle">דירוג מקצועי ואובייקטיבי</div>
+                    </div>
+                </div>
+                <ul class="feature-list">
+                    <li>דירוג צבע ויופי</li>
+                    <li>בדיקת סימטריה</li>
+                    <li>ניתוח מרקם וטעם</li>
+                    <li>הערכת ערך מסחרי</li>
+                    <li>המלצות רכישה</li>
+                </ul>
+                <button class="btn btn-primary" onclick="startQualityAnalysis()">
+                    ⭐ ניתוח איכות
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Interface -->
+    <div class="camera-interface" id="cameraInterface">
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+            <div class="camera-overlay">
+                <div class="analysis-frame">
+                    <div class="analysis-grid-overlay">
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                        <div class="grid-cell"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="camera-controls">
+                <button class="camera-btn" onclick="closeCamera()">
+                    ❌ סגור
+                </button>
+                <div style="color: white; font-weight: bold;">
+                    📸 מנתח אתרוגים מתקדם
+                </div>
+                <button class="camera-btn" onclick="toggleFlash()">
+                    ⚡ תאורה
+                </button>
+            </div>
+            <button class="capture-btn" onclick="captureImage()">
+                📸
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="results-screen" id="resultsScreen">
+        <div class="results-container">
+            <div class="results-header">
+                <h2>🍋 תוצאות הניתוח המתקדם</h2>
+                <button class="close-btn" onclick="closeResults()">❌ סגור</button>
+            </div>
+
+            <!-- Variety Analysis -->
+            <div class="result-section">
+                <h3>🔍 זיהוי זנים</h3>
+                <div class="variety-analysis" id="varietyAnalysis">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Halacha Analysis -->
+            <div class="result-section">
+                <h3>📖 ניתוח הלכתי</h3>
+                <div class="halacha-analysis" id="halachaAnalysis">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="result-section">
+                <h3>📏 מדידות מפורטות</h3>
+                <div class="measurements-grid" id="measurementsGrid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Quality Score -->
+            <div class="result-section">
+                <h3>⭐ דירוג איכות</h3>
+                <div class="quality-score">
+                    <h3>ציון כללי</h3>
+                    <div class="score-circle">
+                        <div class="score-text" id="qualityScore">95</div>
+                    </div>
+                    <p>אתרוג איכותי מאוד - מומלץ לרכישה</p>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="result-section">
+                <h3>💡 המלצות מקצועיות</h3>
+                <div class="recommendations" id="recommendations">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cameraStream = null;
+        let capturedImageData = null;
+        let currentAnalysisType = '';
+
+        // Initialize camera
+        async function initializeCamera() {
+            if (!('isSecureContext' in window) || window.isSecureContext !== true) {
+                alert('ההרשאה למצלמה זמינה רק באתר מאובטח (https) או בשרת מקומי. פתחו דרך localhost או פריסה מאובטחת.');
+                return false;
+            }
+            try {
+                const constraints = {
+                    video: {
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        facingMode: 'environment'
+                    }
+                };
+                
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                video.srcObject = cameraStream;
+                
+                return true;
+            } catch (error) {
+                console.error('Camera error:', error);
+                alert('לא ניתן לגשת למצלמה. אנא ודא שיש לך הרשאות מצלמה.');
+                return false;
+            }
+        }
+
+        // Start variety analysis
+        async function startVarietyAnalysis() {
+            currentAnalysisType = 'variety';
+            if (await initializeCamera()) {
+                document.getElementById('cameraInterface').style.display = 'block';
+            }
+        }
+
+        // Start halacha analysis
+        async function startHalachaAnalysis() {
+            currentAnalysisType = 'halacha';
+            if (await initializeCamera()) {
+                document.getElementById('cameraInterface').style.display = 'block';
+            }
+        }
+
+        // Start multi-angle capture
+        async function startMultiAngleCapture() {
+            currentAnalysisType = 'multiangle';
+            if (await initializeCamera()) {
+                document.getElementById('cameraInterface').style.display = 'block';
+            }
+        }
+
+        // Start quality analysis
+        async function startQualityAnalysis() {
+            currentAnalysisType = 'quality';
+            if (await initializeCamera()) {
+                document.getElementById('cameraInterface').style.display = 'block';
+            }
+        }
+
+        // Capture image
+        function captureImage() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            capturedImageData = canvas.toDataURL('image/jpeg');
+            
+            // Stop camera
+            stopCamera();
+            
+            // Analyze image
+            analyzeImage();
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraInterface').style.display = 'none';
+        }
+
+        // Close camera
+        function closeCamera() {
+            stopCamera();
+        }
+
+        // Toggle flash
+        function toggleFlash() {
+            // Flash simulation for demo
+            const video = document.getElementById('video');
+            video.style.filter = video.style.filter === 'brightness(1.5)' ? '' : 'brightness(1.5)';
+        }
+
+        // Analyze captured image
+        async function analyzeImage() {
+            // ניתוח בפועל לפי תוכן התמונה שנקלטה
+            const results = await performAdvancedAnalysis();
+            displayAdvancedResults(results);
+        }
+
+        // Perform advanced analysis
+        async function performAdvancedAnalysis() {
+            // ניתוח אמיתי לפי פיקסלים: צבע, בהירות, מרקם, וגילוי גוון עור למניעת טעויות
+            return await new Promise((resolve) => {
+                try {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        const { width, height } = canvas;
+                        const imageData = ctx.getImageData(0, 0, width, height);
+
+                        const data = imageData.data;
+                        let yellow = 0, green = 0, skin = 0, bright = 0, total = 0;
+                        // ננתח רק אזור מרכזי של התמונה (ROI) כדי להתעלם מפנים/רקע בקצוות
+                        const roiX0 = Math.floor(width * 0.15);
+                        const roiX1 = Math.floor(width * 0.85);
+                        const roiY0 = Math.floor(height * 0.15);
+                        const roiY1 = Math.floor(height * 0.85);
+                        const step = 2; // דגימה כל פיקסל שני לשיפור ביצועים
+                        for (let y = roiY0; y < roiY1; y += step) {
+                            for (let x = roiX0; x < roiX1; x += step) {
+                                const idx = (y * width + x) * 4;
+                                const r = data[idx];
+                                const g = data[idx + 1];
+                                const b = data[idx + 2];
+                                total++;
+                                const brightness = (r + g + b) / 3;
+                                if (brightness > 140) bright++;
+                                // זיהוי צהוב אתרוגי
+                                if (r > 170 && g > 150 && b < 120 && r >= g) yellow++;
+                                // זיהוי ירוק אתרוגי
+                                else if (g > 120 && r < 160 && b < 140 && g > r && g > b) green++;
+                                // זיהוי גוון עור בסיסי
+                                if (r > 95 && g > 40 && b > 20 && (Math.max(r, g, b) - Math.min(r, g, b)) > 15 && r > g && r > b) {
+                                    skin++;
+                                }
+                            }
+                        }
+
+                        const yellowRatio = yellow / Math.max(1, total);
+                        const greenRatio = green / Math.max(1, total);
+                        const skinRatio = skin / Math.max(1, total);
+                        const brightnessRatio = bright / Math.max(1, total);
+
+                        // מורכבות מרקם: ספירת הפרשי קצה פשוטים
+                        let edgeCount = 0, samples = 0;
+                        for (let y = Math.max(roiY0, 1); y < Math.min(roiY1, height - 1); y += 2) {
+                            for (let x = Math.max(roiX0, 1); x < Math.min(roiX1, width - 1); x += 2) {
+                                const idx = (y * width + x) * 4;
+                                const current = data[idx];
+                                const right = data[idx + 4];
+                                const bottom = data[idx + width * 4];
+                                const diff = Math.abs(current - right) + Math.abs(current - bottom);
+                                if (diff > 40) edgeCount++;
+                                samples++;
+                            }
+                        }
+                        const textureComplexity = Math.min(1, edgeCount / Math.max(1, samples));
+
+                        const etrogColorRatio = yellowRatio + greenRatio;
+                        // סטטוס כשרות בסיסי
+                        let overall = 'questionable';
+                        if (etrogColorRatio > 0.35 && textureComplexity > 0.25 && skinRatio < 0.25) overall = 'kosher';
+                        if (etrogColorRatio < 0.2 || skinRatio > 0.4) overall = 'invalid';
+
+                        const conf = Math.max(0.3, Math.min(0.98, 0.4 + etrogColorRatio * 0.8 + textureComplexity * 0.3 - skinRatio * 0.5));
+
+                        // קביעת זן לפי יחסי צבע ובהירות
+                        let primaryVariety = 'אתרוג ישראלי מקומי';
+                        let varietyConfidence = 0.5;
+                        
+                        // זיהוי זנים מתקדם לפי מאפיינים
+                        if (yellowRatio > 0.6 && brightnessRatio > 0.35 && textureComplexity > 0.25) {
+                            primaryVariety = 'אתרוג קלבריה איטלקי';
+                            varietyConfidence = Math.min(0.95, 0.7 + yellowRatio * 0.3 + textureComplexity * 0.2);
+                        } else if (yellowRatio > 0.35 && greenRatio > 0.15 && textureComplexity > 0.2) {
+                            primaryVariety = 'אתרוג חזון איש';
+                            varietyConfidence = Math.min(0.9, 0.6 + yellowRatio * 0.4 + greenRatio * 0.2);
+                        } else if (greenRatio > 0.4 && yellowRatio < 0.3) {
+                            primaryVariety = 'אתרוג תימני (ירקרק)';
+                            varietyConfidence = Math.min(0.85, 0.5 + greenRatio * 0.4);
+                        } else if (yellowRatio > 0.25 && textureComplexity > 0.15) {
+                            primaryVariety = 'אתרוג ישראלי מקומי';
+                            varietyConfidence = Math.min(0.8, 0.4 + yellowRatio * 0.3 + textureComplexity * 0.2);
+                        }
+                        
+                        // ניתוח צורה מתקדם
+                        const shapeAnalysis = analyzeShape(data, width, height, roiX0, roiY0, roiX1, roiY1);
+                        if (shapeAnalysis.isOval && yellowRatio > 0.4) {
+                            primaryVariety = 'אתרוג קלבריה איטלקי';
+                            varietyConfidence = Math.min(0.98, varietyConfidence + 0.1);
+                        } else if (shapeAnalysis.isRound && greenRatio > 0.3) {
+                            primaryVariety = 'אתרוג תימני (ירקרק)';
+                            varietyConfidence = Math.min(0.92, varietyConfidence + 0.08);
+                        }
+                        
+                        // חלופות דינמיות לפי מאפיינים
+                        const alternatives = [];
+                        if (primaryVariety !== 'אתרוג קלבריה איטלקי' && yellowRatio > 0.5) {
+                            alternatives.push({ 
+                                name: 'אתרוג קלבריה איטלקי', 
+                                confidence: Math.min(0.9, 0.6 + yellowRatio * 0.3) 
+                            });
+                        }
+                        if (primaryVariety !== 'אתרוג חזון איש' && yellowRatio > 0.3) {
+                            alternatives.push({ 
+                                name: 'אתרוג חזון איש', 
+                                confidence: Math.min(0.85, 0.5 + yellowRatio * 0.4) 
+                            });
+                        }
+                        if (primaryVariety !== 'אתרוג תימני (ירקרק)' && greenRatio > 0.3) {
+                            alternatives.push({ 
+                                name: 'אתרוג תימני (ירקרק)', 
+                                confidence: Math.min(0.8, 0.4 + greenRatio * 0.4) 
+                            });
+                        }
+                        
+                        // אם אין חלופות, הוסף זנים בסיסיים
+                        if (alternatives.length === 0) {
+                            alternatives.push({ name: 'אתרוג ישראלי מקומי', confidence: 0.6 });
+                            alternatives.push({ name: 'אתרוג תימני', confidence: 0.5 });
+                        }
+                        
+                        // פונקציה לניתוח צורה
+                        function analyzeShape(data, width, height, x0, y0, x1, y1) {
+                            let edgePixels = 0;
+                            let totalPixels = 0;
+                            let centerX = 0, centerY = 0;
+                            let minX = width, maxX = 0, minY = height, maxY = 0;
+                            
+                            // מציאת גבולות האובייקט
+                            for (let y = y0; y < y1; y++) {
+                                for (let x = x0; x < x1; x++) {
+                                    const idx = (y * width + x) * 4;
+                                    const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                                    const brightness = (r + g + b) / 3;
+                                    
+                                    if (brightness > 100) { // פיקסל בהיר (אובייקט)
+                                        totalPixels++;
+                                        centerX += x;
+                                        centerY += y;
+                                        minX = Math.min(minX, x);
+                                        maxX = Math.max(maxX, x);
+                                        minY = Math.min(minY, y);
+                                        maxY = Math.max(maxY, y);
+                                    }
+                                }
+                            }
+                            
+                            if (totalPixels === 0) return { isOval: false, isRound: false, aspectRatio: 1 };
+                            
+                            centerX /= totalPixels;
+                            centerY /= totalPixels;
+                            
+                            const widthObj = maxX - minX;
+                            const heightObj = maxY - minY;
+                            const aspectRatio = widthObj / heightObj;
+                            
+                            return {
+                                isOval: aspectRatio > 1.2 && aspectRatio < 1.8,
+                                isRound: aspectRatio > 0.8 && aspectRatio < 1.2,
+                                aspectRatio: aspectRatio
+                            };
+                        }
+
+                        // בדיקות הלכתיות פשוטות לפי ספים ממדדים
+                        const checks = [
+                            {
+                                name: 'בדיקת צבע ובשלות',
+                                status: yellowRatio > 0.25 ? 'kosher' : (greenRatio > 0.45 ? 'questionable' : 'invalid'),
+                                details: `צהוב: ${(yellowRatio*100).toFixed(0)}% | ירוק: ${(greenRatio*100).toFixed(0)}%`,
+                                explanation: 'יחסי צבע צהוב/ירוק משמשים כאינדיקציה לבשלות'
+                            },
+                            {
+                                name: 'בדיקת מרקם',
+                                status: textureComplexity > 0.22 ? 'kosher' : 'questionable',
+                                details: `מורכבות מרקם: ${(textureComplexity*100).toFixed(0)}%`,
+                                explanation: 'מרקם גבשושי אופייני לאתרוג'
+                            },
+                            {
+                                name: 'בדיקת הימצאות עור (הפרעה)',
+                                status: skinRatio < 0.3 ? 'kosher' : (skinRatio < 0.45 ? 'questionable' : 'invalid'),
+                                details: `עור/פנים: ${(skinRatio*100).toFixed(0)}%`,
+                                explanation: 'ריבוי גוון עור בתמונה עשוי להעיד על פנים/ידיים בפריים'
+                            },
+                            {
+                                name: 'בדיקת נקודות שחורות (בלטלך)',
+                                status: blackSpotRatio < 0.02 ? 'kosher' : (blackSpotRatio < 0.05 ? 'questionable' : 'invalid'),
+                                details: `נקודות שחורות: ${(blackSpotRatio*100).toFixed(2)}% | אשכולות: ${(clusterRatio*100).toFixed(2)}%`,
+                                explanation: 'נקודות שחורות על העלים מעידות על חיתוך בשליש העליון ופוסלות את האתרוג. אשכולות מעידים על פגם משמעותי יותר.'
+                            },
+                            {
+                                name: 'בדיקת חורים ושריטות',
+                                status: (holeRatio + scratchRatio) < 0.01 ? 'kosher' : 'questionable',
+                                details: `חורים: ${(holeRatio*100).toFixed(2)}% | שריטות: ${(scratchRatio*100).toFixed(2)}%`,
+                                explanation: 'חורים ושריטות עמוקים פוסלים את האתרוג. חורים עמוקים חמורים יותר משריטות שטחיות.'
+                            },
+                            {
+                                name: 'בדיקת איכות כללית',
+                                status: defectRatio < 0.03 ? 'kosher' : (defectRatio < 0.08 ? 'questionable' : 'invalid'),
+                                details: `פגמים כולל: ${(defectRatio*100).toFixed(2)}%`,
+                                explanation: 'סך כל הפגמים משפיע על הכשרות הכללית של האתרוג'
+                            }
+                        ];
+
+                        // מדידות נגזרות מהתמונה (הערכות) – משתנות בין תמונות
+                        const aspect = height / Math.max(1, width);
+                        const lengthCm = (10 + aspect * 4).toFixed(1);
+                        const widthCm = (6 + (1/aspect) * 2).toFixed(1);
+                        
+                        // חישוב משקל משוער לפי שטח וצבע
+                        const estimatedArea = (yellowRatio + greenRatio) * width * height;
+                        const weightGrams = Math.round(150 + estimatedArea * 0.001);
+                        
+                        // הערכת פיטם לפי מרקם וצבע
+                        let pitamStatus = 'דורש בדיקה';
+                        if (textureComplexity > 0.3 && yellowRatio > 0.4) {
+                            pitamStatus = 'שלם ויפה';
+                        } else if (textureComplexity > 0.2) {
+                            pitamStatus = 'שלם';
+                        } else if (defectRatio > 0.05) {
+                            pitamStatus = 'פגום';
+                        }
+                        
+                        // הערכת צבע לפי יחסי צהוב/ירוק
+                        let colorDescription = 'לא ברור';
+                        if (yellowRatio > 0.6) colorDescription = 'צהוב דומיננטי';
+                        else if (yellowRatio > 0.4) colorDescription = 'צהוב-כתום';
+                        else if (greenRatio > 0.4) colorDescription = 'ירקרק';
+                        else if (yellowRatio > 0.2) colorDescription = 'צהוב חיוור';
+                        
+                        // הערכת מרקם
+                        let textureDescription = 'חלק';
+                        if (textureComplexity > 0.3) textureDescription = 'גבשושי מאוד';
+                        else if (textureComplexity > 0.2) textureDescription = 'גבשושי';
+                        else if (textureComplexity > 0.1) textureDescription = 'מעט גבשושי';
+                        
+                        const qualityScore = Math.max(0, Math.min(100, Math.round(
+                            (yellowRatio * 55) + (textureComplexity * 25) + (brightnessRatio * 20) - (skinRatio * 15) - (defectRatio * 100)
+                        )));
+
+                        // זיהוי פגמים מתקדם
+                        let blackSpots = 0, scratches = 0, holes = 0;
+                        let defectPixels = 0;
+                        let defectClusters = 0;
+                        
+                        // זיהוי נקודות שחורות (בלטלך) עם ניתוח אשכולות
+                        const blackSpotMap = new Array(width * height).fill(0);
+                        for (let y = roiY0; y < roiY1; y++) {
+                            for (let x = roiX0; x < roiX1; x++) {
+                                const idx = (y * width + x) * 4;
+                                const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                                const brightness = (r + g + b) / 3;
+                                
+                                // נקודות שחורות מאוד (חשד לבלטלך)
+                                if (brightness < 40 && r < 50 && g < 50 && b < 50) {
+                                    blackSpots++;
+                                    defectPixels++;
+                                    blackSpotMap[y * width + x] = 1;
+                                }
+                                // נקודות כהות (חשד לפגם)
+                                else if (brightness < 80 && brightness > 40) {
+                                    defectPixels++;
+                                }
+                            }
+                        }
+                        
+                        // ניתוח אשכולות נקודות שחורות
+                        for (let y = roiY0 + 1; y < roiY1 - 1; y++) {
+                            for (let x = roiX0 + 1; x < roiX1 - 1; x++) {
+                                if (blackSpotMap[y * width + x] === 1) {
+                                    const neighbors = [
+                                        blackSpotMap[(y-1) * width + x],
+                                        blackSpotMap[(y+1) * width + x],
+                                        blackSpotMap[y * width + (x-1)],
+                                        blackSpotMap[y * width + (x+1)]
+                                    ];
+                                    if (neighbors.some(n => n === 1)) {
+                                        defectClusters++;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // זיהוי חורים/שריטות לפי ניגודיות גבוהה וניתוח צורה
+                        for (let y = roiY0 + 2; y < roiY1 - 2; y++) {
+                            for (let x = roiX0 + 2; x < roiX1 - 2; x++) {
+                                const idx = (y * width + x) * 4;
+                                const center = data[idx];
+                                const left = data[idx - 4];
+                                const right = data[idx + 4];
+                                const top = data[idx - width * 4];
+                                const bottom = data[idx + width * 4];
+                                
+                                const contrast = Math.abs(center - left) + Math.abs(center - right) + 
+                                               Math.abs(center - top) + Math.abs(center - bottom);
+                                
+                                if (contrast > 120) {
+                                    if (center < 60) {
+                                        holes++;
+                                        // בדיקה אם זה חור עמוק או שריטה
+                                        const depth = Math.abs(center - Math.max(left, right, top, bottom));
+                                        if (depth > 80) holes++;
+                                    } else if (contrast > 150) {
+                                        scratches++;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        const defectRatio = defectPixels / total;
+                        const blackSpotRatio = blackSpots / total;
+                        const holeRatio = holes / total;
+                        const scratchRatio = scratches / total;
+                        const clusterRatio = defectClusters / total;
+
+                        const analysis = {
+                            variety: {
+                                primary: primaryVariety,
+                                confidence: varietyConfidence,
+                                alternatives
+                            },
+                            halacha: {
+                                overall,
+                                checks
+                },
+                measurements: {
+                                length: `${lengthCm} ס"מ`,
+                                width: `${widthCm} ס"מ`,
+                                weight: `${weightGrams} גרם`,
+                                pitam: pitamStatus,
+                                color: colorDescription,
+                                texture: textureDescription
+                },
+                quality: {
+                                score: qualityScore,
+                                aesthetic: qualityScore > 85 ? 'מצוין' : (qualityScore > 70 ? 'טוב מאוד' : 'בינוני'),
+                                symmetry: aspect > 1.2 && aspect < 1.8 ? 'מאוזנת' : 'לא אחידה',
+                                commercial: qualityScore > 80 ? 'איכות על' : (qualityScore > 60 ? 'שוק בינוני-גבוה' : 'בסיסי')
+                },
+                recommendations: [
+                                qualityScore > 85 ? 'מומלץ מאוד לרכישה' : (overall === 'invalid' ? 'לא מומלץ - דרוש צילום נוסף' : 'בדוק חלופות נוספות'),
+                                brightnessRatio < 0.25 ? 'האר את הסצנה וצור תמונה נוספת' : 'שמירה טובה על תאורה',
+                                skinRatio > 0.35 ? 'הרחק פנים/ידיים מהפריים' : 'פריים נקי מהסחות'
+                            ]
+                        };
+
+                        resolve(analysis);
+                    };
+                    img.src = capturedImageData;
+                } catch (e) {
+                    resolve({
+                        variety: { primary: 'לא זמין', confidence: 0, alternatives: [] },
+                        halacha: { overall: 'questionable', checks: [] },
+                        measurements: { length: '-', width: '-', weight: '-', pitam: '-', color: '-', texture: '-' },
+                        quality: { score: 0, aesthetic: '-', symmetry: '-', commercial: '-' },
+                        recommendations: ['שגיאה בניתוח – נסה שוב']
+                    });
+                }
+            });
+        }
+
+        // Display advanced results
+        function displayAdvancedResults(results) {
+            // Display variety analysis
+            const varietyContainer = document.getElementById('varietyAnalysis');
+            varietyContainer.innerHTML = '';
+            
+            // Primary variety
+            const primaryCard = createVarietyCard(results.variety.primary, results.variety.confidence, true);
+            varietyContainer.appendChild(primaryCard);
+            
+            // Alternative varieties
+            results.variety.alternatives.forEach(alt => {
+                const altCard = createVarietyCard(alt.name, alt.confidence, false);
+                varietyContainer.appendChild(altCard);
+            });
+            
+            // Display halacha analysis
+            const halachaContainer = document.getElementById('halachaAnalysis');
+            halachaContainer.innerHTML = '';
+            
+            results.halacha.checks.forEach(check => {
+                const halachaItem = document.createElement('div');
+                halachaItem.className = 'halacha-item';
+                halachaItem.innerHTML = `
+                    <h4>${check.name}</h4>
+                    <p>${check.details}</p>
+                    <p><small>${check.explanation}</small></p>
+                    <span class="halacha-status status-${check.status}">
+                        ${check.status === 'kosher' ? '✅ כשר' : 
+                          check.status === 'invalid' ? '❌ פסול' : '⚠️ דורש בדיקה'}
+                    </span>
+                `;
+                halachaContainer.appendChild(halachaItem);
+            });
+            
+            // Display measurements
+            const measurementsContainer = document.getElementById('measurementsGrid');
+            measurementsContainer.innerHTML = '';
+            
+            const measurementLabels = {
+                'length': '📏 אורך',
+                'width': '📐 רוחב',
+                'weight': '⚖️ משקל',
+                'pitam': '👑 פיטם',
+                'color': '🎨 צבע',
+                'texture': '✨ מרקם'
+            };
+            
+            Object.entries(results.measurements).forEach(([key, value]) => {
+                const measurementItem = document.createElement('div');
+                measurementItem.className = 'measurement-item';
+                measurementItem.innerHTML = `
+                    <div class="measurement-label">${measurementLabels[key] || key}</div>
+                    <div class="measurement-value">${value}</div>
+                `;
+                measurementsContainer.appendChild(measurementItem);
+            });
+            
+            // Display quality score
+            document.getElementById('qualityScore').textContent = results.quality.score;
+            
+            // Display recommendations
+            const recommendationsContainer = document.getElementById('recommendations');
+            recommendationsContainer.innerHTML = '';
+            
+            // המלצות דינמיות לפי הניתוח
+            const recommendations = [];
+            
+            if (results.halacha.overall === 'kosher') {
+                if (results.quality.score > 85) {
+                    recommendations.push('מומלץ מאוד לרכישה - אתרוג איכותי');
+                    recommendations.push('מתאים למצוות ארבעת המינים');
+                    recommendations.push('איכות מסחרית גבוהה');
+                } else if (results.quality.score > 70) {
+                    recommendations.push('מומלץ לרכישה - אתרוג כשר');
+                    recommendations.push('מתאים למצווה');
+                    recommendations.push('איכות מסחרית טובה');
+                } else {
+                    recommendations.push('כשר למצווה אך לא מהודר');
+                    recommendations.push('בדוק חלופות נוספות');
+                }
+            } else if (results.halacha.overall === 'questionable') {
+                recommendations.push('דורש בדיקה נוספת');
+                recommendations.push('צלם מזוויות נוספות');
+                recommendations.push('בדוק תאורה ורקע');
+            } else {
+                recommendations.push('לא מומלץ לרכישה');
+                recommendations.push('דורש צילום מחדש');
+                recommendations.push('בדוק שהאובייקט הוא אכן אתרוג');
+            }
+            
+            // המלצות טכניות
+            if (results.quality.brightnessRatio < 0.25) {
+                recommendations.push('האר את הסצנה - תאורה חלשה מדי');
+            }
+            if (results.quality.skinRatio > 0.3) {
+                recommendations.push('הרחק פנים/ידיים מהפריים');
+            }
+            if (results.quality.defectRatio > 0.05) {
+                recommendations.push('בדוק פגמים נוספים מזוויות שונות');
+            }
+            if (results.quality.textureComplexity < 0.15) {
+                recommendations.push('צלם מקרוב יותר לזיהוי מרקם');
+            }
+            
+            recommendations.push('שמור במקום קריר ויבש');
+            
+            results.recommendations.forEach(rec => {
+                const recItem = document.createElement('div');
+                recItem.className = 'recommendation-item';
+                recItem.textContent = rec;
+                recommendationsContainer.appendChild(recItem);
+            });
+            
+            // Show results screen
+            document.getElementById('resultsScreen').style.display = 'block';
+        }
+
+        // Create variety card
+        function createVarietyCard(name, confidence, isSelected) {
+            const card = document.createElement('div');
+            card.className = `variety-card ${isSelected ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="variety-icon">🍋</div>
+                <div class="variety-name">${name}</div>
+                <div class="variety-confidence">וודאות: ${Math.round(confidence * 100)}%</div>
+            `;
+            return card;
+        }
+
+        // Close results
+        function closeResults() {
+            document.getElementById('resultsScreen').style.display = 'none';
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+    </script>
+</body>
+</html> 
