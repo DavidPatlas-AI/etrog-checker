@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בודק אתרוגים - לוח בקרה גרסאות</title>
+    <link rel="stylesheet" href="versions-styles.css">
+    <!-- הוספת highlight.js לתצוגת קוד -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <!-- הוספת marked.js לתצוגת Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* עיצובים נוספים לדף זה */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .search-section {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-section {
+            background: var(--bg-primary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-info {
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .version-section.hidden {
+            display: none;
+        }
+
+        .file-card.hidden {
+            display: none;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 5px 10px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .export-section {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .export-btn {
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .export-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Modal לתצוגה פנימית */
+        .file-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: var(--bg-primary);
+            margin: 2% auto;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 1200px;
+            height: 90%;
+            max-height: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 5px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            height: calc(100% - 80px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-toolbar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .file-info {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--bg-secondary);
+        }
+
+        .file-content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background: var(--bg-primary);
+        }
+
+        .file-content.code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .file-content.pdf {
+            background: white;
+        }
+
+        .file-content.markdown {
+            background: white;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .file-content.markdown h1,
+        .file-content.markdown h2,
+        .file-content.markdown h3,
+        .file-content.markdown h4,
+        .file-content.markdown h5,
+        .file-content.markdown h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            color: #2c3e50;
+        }
+
+        .file-content.markdown p {
+            margin-bottom: 1em;
+        }
+
+        .file-content.markdown code {
+            background: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .file-content.markdown pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .file-content.markdown pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .file-content.markdown blockquote {
+            border-left: 4px solid var(--primary-color);
+            margin: 1em 0;
+            padding-left: 1em;
+            color: #666;
+        }
+
+        .file-content.markdown ul,
+        .file-content.markdown ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .file-content.markdown li {
+            margin-bottom: 0.5em;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            font-size: 1.1rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-type-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        /* תצוגת PDF */
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .docx-viewer {
+            padding: 30px;
+            text-align: center;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            margin: 20px;
+        }
+        
+        .docx-viewer h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .docx-viewer p {
+            margin-bottom: 25px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .file-info-box {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: var(--border-radius-small);
+            margin-top: 20px;
+            text-align: right;
+            border: 1px solid var(--border-color);
+        }
+
+        /* תצוגת קוד */
+        .code-viewer {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .code-viewer pre {
+            margin: 0;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* תצוגת Markdown */
+        .markdown-viewer {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 20px;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* תצוגת טקסט רגיל */
+        .text-viewer {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 20px;
+            background: white;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align:right;margin:20px 0 0 0;">
+        <a href="../index.html" style="background:#667eea;color:white;padding:10px 22px;border-radius:20px;text-decoration:none;font-weight:bold;">🏠 דף הבית</a>
+    </div>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>🍋 בודק אתרוגים - לוח בקרה גרסאות</h1>
+            <p>ניהול מתקדם של כל הגרסאות והקבצים בפרויקט</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="🔍 חפש קבצים, גרסאות או תיאורים...">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">הכל</button>
+                    <button class="filter-btn" data-filter="active">פעיל</button>
+                    <button class="filter-btn" data-filter="experimental">ניסיוני</button>
+                    <button class="filter-btn" data-filter="archive">ארכיון</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-category="all">כל הקטגוריות</button>
+                <button class="filter-btn" data-category="claude">Claude AI</button>
+                <button class="filter-btn" data-category="react">React</button>
+                <button class="filter-btn" data-category="flutter">Flutter</button>
+                <button class="filter-btn" data-category="research">מחקר</button>
+                <button class="filter-btn" data-category="archive">ארכיון</button>
+            </div>
+        </div>
+
+        <div class="results-info" id="resultsInfo">
+            מציג את כל הגרסאות (<span id="fileCount">12</span> קבצים)
+        </div>
+
+        <div class="content" id="content">
+            <!-- התוכן יטען דינמית -->
+        </div>
+
+        <div class="export-section">
+            <h3>ייצוא נתונים</h3>
+            <button class="export-btn" onclick="exportToJSON()">ייצוא ל-JSON</button>
+            <button class="export-btn" onclick="exportToCSV()">ייצוא ל-CSV</button>
+            <button class="export-btn" onclick="printPage()">הדפסה</button>
+        </div>
+
+        <div class="footer">
+            <p>🍋 פרויקט בודק אתרוגים - לוח בקרה גרסאות | נבנה עם ❤️</p>
+            <p>תאריך עדכון: <span id="current-date"></span></p>
+        </div>
+    </div>
+
+    <!-- Modal לתצוגה פנימית -->
+    <div id="fileModal" class="file-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span id="modalFileIcon" class="file-type-icon">📄</span>
+                    <span id="modalFileName">שם הקובץ</span>
+                </div>
+                <button class="modal-close" onclick="closeFileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-toolbar">
+                    <div class="file-info" id="modalFileInfo">
+                        טוען...
+                    </div>
+                    <div class="file-actions">
+                        <button class="action-btn secondary" onclick="downloadFile()">
+                            📥 הורדה
+                        </button>
+                        <button class="action-btn secondary" onclick="openInNewTab()">
+                            🔗 פתח בטאב חדש
+                        </button>
+                        <button class="action-btn" onclick="copyFilePath()">
+                            📋 העתק נתיב
+                        </button>
+                    </div>
+                </div>
+                <div class="file-content" id="modalFileContent">
+                    <div class="loading-spinner"></div>
+                    <div style="text-align: center; margin-top: 10px;">טוען קובץ...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="versions-manager.js"></script>
+    <script>
+        // Warn when opened via file:// (fetch not allowed in many cases)
+        (function(){
+            if (location.protocol === 'file:') {
+                const w = document.createElement('div');
+                w.style.cssText = 'position:fixed;left:16px;right:16px;top:16px;z-index:2000;background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.1)';
+                w.textContent = '⚠️ מומלץ לפתוח דרך שרת מקומי (ראה פיתוח_dev/RUN.html) כדי שטעינת הקבצים (fetch) תעבוד.';
+                document.body.appendChild(w);
+            }
+        })();
+        // יצירת מופע מנהל הגרסאות
+        const manager = new VersionsManager();
+        let currentFilter = 'all';
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let currentFilePath = '';
+
+        // אתחול הדף
+        document.addEventListener('DOMContentLoaded', function () {
+            initializePage();
+            setupEventListeners();
+            renderContent();
+        });
+
+        function initializePage() {
+            // הצגת התאריך הנוכחי
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('he-IL');
+
+            // עדכון ספירת קבצים
+            updateFileCount();
+        }
+
+        function setupEventListeners() {
+            // חיפוש
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function (e) {
+                searchQuery = e.target.value;
+                renderContent();
+            });
+
+            // סינון לפי סטטוס
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    renderContent();
+                });
+            });
+
+            // סינון לפי קטגוריה
+            document.querySelectorAll('[data-category]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('[data-category]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.dataset.category;
+                    renderContent();
+                });
+            });
+
+            // סגירת modal בלחיצה מחוץ לתוכן
+            document.getElementById('fileModal').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeFileModal();
+                }
+            });
+
+            // סגירת modal עם Escape
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeFileModal();
+                }
+            });
+        }
+
+        function renderContent() {
+            const content = document.getElementById('content');
+            let html = '';
+
+            const versions = manager.getAllVersions();
+            let totalFiles = 0;
+
+            Object.keys(versions).forEach(versionKey => {
+                const version = versions[versionKey];
+                
+                // סינון לפי קטגוריה
+                if (currentCategory !== 'all' && versionKey !== currentCategory) {
+                    return;
+                }
+
+                let versionFiles = version.files;
+                
+                // סינון לפי סטטוס
+                if (currentFilter !== 'all') {
+                    versionFiles = versionFiles.filter(file => file.status === currentFilter);
+                }
+
+                // סינון לפי חיפוש
+                if (searchQuery) {
+                    const searchTerm = searchQuery.toLowerCase();
+                    versionFiles = versionFiles.filter(file => 
+                        file.name.toLowerCase().includes(searchTerm) ||
+                        file.description.toLowerCase().includes(searchTerm) ||
+                        file.path.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                if (versionFiles.length === 0) {
+                    return;
+                }
+
+                totalFiles += versionFiles.length;
+
+                html += `
+                    <div class="version-section">
+                        <div class="section-header">
+                            <div class="section-icon" style="background: ${version.color}">${version.icon}</div>
+                            <div>
+                                <div class="section-title">${version.name}</div>
+                                <div class="section-description">${manager.getVersionDescription(versionKey)}</div>
+                            </div>
+                        </div>
+                        <div class="files-grid">
+                `;
+
+                versionFiles.forEach(file => {
+                    const fileIcon = getFileIcon(file.name);
+                    html += `
+                        <div class="file-card" onclick="openFileInModal('${file.path}', '${file.name}')">
+                            <div class="file-header">
+                                <span class="file-icon">${fileIcon}</span>
+                                <div class="file-name">${file.name}</div>
+                            </div>
+                            <div class="file-path">${file.path}</div>
+                            <div class="file-details">
+                                <span class="file-size">${file.size}</span>
+                                <span class="file-lines">${file.lines} שורות</span>
+                            </div>
+                            <div class="status-badge status-${file.status}">${manager.getStatusText(file.status)}</div>
+                            <div class="file-description">${file.description}</div>
+                            <div class="quick-actions">
+                                <button class="quick-btn" onclick="event.stopPropagation(); openFileInModal('${file.path}', '${file.name}')">
+                                    👁️ צפייה
+                                </button>
+                                <button class="quick-btn" onclick="event.stopPropagation(); openInNewTab('${file.path}')">
+                                    🔗 פתח
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (totalFiles === 0) {
+                html = `
+                    <div class="no-results">
+                        <h3>לא נמצאו קבצים</h3>
+                        <p>נסה לשנות את הסינון או החיפוש</p>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = html;
+            document.getElementById('fileCount').textContent = totalFiles;
+        }
+
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'tsx': '⚛️',
+                'ts': '📘',
+                'js': '📗',
+                'jsx': '⚛️',
+                'html': '🌐',
+                'css': '🎨',
+                'md': '📝',
+                'pdf': '📄',
+                'dart': '📱',
+                'py': '🐍',
+                'json': '📋',
+                'txt': '📄'
+            };
+            return icons[ext] || '📄';
+        }
+
+        function openFileInModal(filePath, fileName) {
+            currentFilePath = filePath;
+            
+            // עדכון כותרת Modal
+            document.getElementById('modalFileName').textContent = fileName;
+            document.getElementById('modalFileIcon').textContent = getFileIcon(fileName);
+            
+            // הצגת Modal
+            document.getElementById('fileModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // טעינת הקובץ
+            loadFileContent(filePath, fileName);
+        }
+
+        function loadFileContent(filePath, fileName) {
+            const contentDiv = document.getElementById('modalFileContent');
+            const infoDiv = document.getElementById('modalFileInfo');
+            
+            // הצגת טעינה
+            contentDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div class="loading-spinner"></div>
+                    <div style="margin-top: 10px;">טוען קובץ...</div>
+                </div>
+            `;
+            
+            // בניית נתיב מלא
+            let fullPath = filePath;
+            if (filePath) {
+                if (filePath.startsWith('גרסאות_versions/')) {
+                    fullPath = '../' + filePath;
+                } else if (filePath.startsWith('versions/')) {
+                    fullPath = '../' + filePath; // תאימות לאחור
+                } else if (filePath.startsWith('../')) {
+                    fullPath = filePath;
+                }
+            }
+            
+            // קביעת סוג הקובץ
+            const fileExt = fileName.split('.').pop().toLowerCase();
+            
+            // עדכון מידע על הקובץ
+            infoDiv.textContent = `נתיב: ${filePath} | סוג: ${fileExt.toUpperCase()}`;
+            
+            // טעינת הקובץ לפי סוג
+            if (fileExt === 'pdf' || fileExt === 'docx') {
+                // קבצי PDF ו-DOCX לא נטענים כטקסט
+                displayFileContent(null, fileExt, fileName);
+            } else {
+                fetch(fullPath)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(content => {
+                        displayFileContent(content, fileExt, fileName);
+                    })
+                    .catch(error => {
+                        console.error('Error loading file:', error);
+                        contentDiv.innerHTML = `
+                            <div class="error-message">
+                                <h3>❌ שגיאה בטעינת הקובץ</h3>
+                                <p>לא ניתן לטעון את הקובץ: ${fileName}</p>
+                                <p>שגיאה: ${error.message}</p>
+                                <button class="action-btn" onclick="openInNewTab('${filePath}')">
+                                    נסה לפתוח בטאב חדש
+                                </button>
+                            </div>
+                        `;
+                    });
+            }
+        }
+
+        function displayFileContent(content, fileExt, fileName) {
+            const contentDiv = document.getElementById('modalFileContent');
+            
+            switch (fileExt) {
+                case 'pdf':
+                    // תצוגת PDF
+                    contentDiv.className = 'file-content pdf';
+                    let pdfPath = currentFilePath;
+                    if (currentFilePath) {
+                        if (currentFilePath.startsWith('גרסאות_versions/')) {
+                            pdfPath = '../' + currentFilePath;
+                        } else if (currentFilePath.startsWith('versions/')) {
+                            pdfPath = '../' + currentFilePath; // תאימות לאחור
+                        } else if (currentFilePath.startsWith('../')) {
+                            pdfPath = currentFilePath;
+                        }
+                    }
+                    contentDiv.innerHTML = `
+                        <iframe class="pdf-viewer" src="${encodeURI(pdfPath)}"></iframe>
+                    `;
+                    break;
+                    
+                case 'docx':
+                    // תצוגת DOCX - הצגה כקובץ להורדה
+                    contentDiv.className = 'file-content docx';
+                    contentDiv.innerHTML = `
+                        <div class="docx-viewer">
+                            <h3>📄 קובץ Word (DOCX)</h3>
+                            <p>קובץ זה הוא מסמך Word. לחץ על כפתור ההורדה כדי לפתוח אותו.</p>
+                            <button class="action-btn" onclick="downloadFile()">
+                                📥 הורד קובץ Word
+                            </button>
+                            <div class="file-info-box">
+                                <strong>שם הקובץ:</strong> ${fileName}<br>
+                                <strong>סוג:</strong> מסמך Word (DOCX)<br>
+                                <strong>נתיב:</strong> ${currentFilePath}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'md':
+                    // תצוגת Markdown
+                    contentDiv.className = 'file-content markdown';
+                    try {
+                        const htmlContent = marked.parse(content);
+                        contentDiv.innerHTML = `
+                            <div class="markdown-viewer">${htmlContent}</div>
+                        `;
+                    } catch (error) {
+                        contentDiv.innerHTML = `
+                            <div class="text-viewer">${escapeHtml(content)}</div>
+                        `;
+                    }
+                    break;
+                    
+                case 'tsx':
+                case 'ts':
+                case 'js':
+                case 'jsx':
+                case 'css':
+                case 'html':
+                case 'json':
+                case 'py':
+                case 'dart':
+                    // תצוגת קוד
+                    contentDiv.className = 'file-content code';
+                    try {
+                        const highlighted = hljs.highlight(content, {language: fileExt});
+                        contentDiv.innerHTML = `
+                            <div class="code-viewer">
+                                <pre><code class="hljs ${fileExt}">${highlighted.value}</code></pre>
+                            </div>
+                        `;
+                    } catch (error) {
+                        contentDiv.innerHTML = `
+                            <div class="text-viewer">${escapeHtml(content)}</div>
+                        `;
+                    }
+                    break;
+                    
+                default:
+                    // תצוגת טקסט רגיל
+                    contentDiv.className = 'file-content';
+                    contentDiv.innerHTML = `
+                        <div class="text-viewer">${escapeHtml(content)}</div>
+                    `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function closeFileModal() {
+            document.getElementById('fileModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentFilePath = '';
+        }
+
+        function downloadFile() {
+            if (!currentFilePath) return;
+            
+            let fullPath = currentFilePath;
+            if (currentFilePath) {
+                if (currentFilePath.startsWith('גרסאות_versions/')) {
+                    fullPath = '../' + currentFilePath;
+                } else if (currentFilePath.startsWith('versions/')) {
+                    fullPath = '../' + currentFilePath; // תאימות לאחור
+                } else if (currentFilePath.startsWith('../')) {
+                    fullPath = currentFilePath;
+                }
+            }
+            
+            const link = document.createElement('a');
+            link.href = fullPath;
+            link.download = currentFilePath.split('/').pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openInNewTab(filePath) {
+            let fullPath = filePath;
+            if (filePath) {
+                if (filePath.startsWith('גרסאות_versions/')) {
+                    fullPath = '../' + filePath;
+                } else if (filePath.startsWith('versions/')) {
+                    fullPath = '../' + filePath; // תאימות לאחור
+                } else if (filePath.startsWith('../')) {
+                    fullPath = filePath;
+                }
+            }
+            window.open(fullPath, '_blank');
+        }
+
+        function copyFilePath() {
+            if (!currentFilePath) return;
+            
+            navigator.clipboard.writeText(currentFilePath).then(() => {
+                // הצגת הודעה זמנית
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ הועתק!';
+                btn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('לא ניתן להעתיק את הנתיב');
+            });
+        }
+
+        function updateFileCount() {
+            const versions = manager.getAllVersions();
+            let totalFiles = 0;
+            
+            Object.values(versions).forEach(version => {
+                totalFiles += version.files.length;
+            });
+            
+            document.getElementById('fileCount').textContent = totalFiles;
+        }
+
+        function exportToJSON() {
+            const versions = manager.getAllVersions();
+            const dataStr = JSON.stringify(versions, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'etrog-versions.json';
+            link.click();
+        }
+
+        function exportToCSV() {
+            const versions = manager.getAllVersions();
+            let csv = 'שם,נתיב,גודל,שורות,סטטוס,תיאור,קטגוריה\n';
+            
+            Object.entries(versions).forEach(([category, version]) => {
+                version.files.forEach(file => {
+                    csv += `"${file.name}","${file.path}","${file.size}","${file.lines}","${file.status}","${file.description}","${version.name}"\n`;
+                });
+            });
+            
+            const dataBlob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'etrog-versions.csv';
+            link.click();
+        }
+
+        function printPage() {
+            window.print();
+        }
+    </script>
+</body>
+
+</html>

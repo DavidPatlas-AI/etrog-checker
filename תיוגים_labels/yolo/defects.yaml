@@ -1,0 +1,7 @@
+# תצורת נתונים לדגם פגמים באתרוג
+path: .
+train: ../../נתונים_dataset/גלמי_raw/train/images
+val: ../../נתונים_dataset/גלמי_raw/val/images
+
+nc: 6
+names: [stain, scratch, hole, pitom_missing, pitom_broken, peel_missing]

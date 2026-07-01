@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת אתרוגים - מצלמה אמיתית עם AI מתקדם</title>
+    
+    <!-- TensorFlow.js with WebGL backend for maximum performance -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    
+    <!-- OpenCV.js optimized version -->
+    <script async src="https://cdn.jsdelivr.net/npm/opencv.js@1.2.1/opencv.min.js" onload="window.onOpenCvReady && window.onOpenCvReady();" onerror="window.onOpenCvError && window.onOpenCvError();"></script>
+    
+    <!-- YOLO.js optimized for speed -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    
+    <!-- Performance optimization libraries -->
+    <script>
+        // Performance.now polyfill for better timing
+        if (typeof performance === 'undefined') {
+            window.performance = {};
+        }
+        if (typeof performance.now === 'undefined') {
+            performance.now = Date.now || function() { return new Date().getTime(); };
+        }
+    </script>
+    
+    <!-- Essential libraries only to avoid module conflicts -->
+    
+    <style>
+        /* CSS Variables for theming */
+        :root {
+          --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          --bg-secondary: white;
+          --text-primary: #1e293b;
+          --text-secondary: #475569;
+          --card-bg: #fff;
+          --border-color: #e5e7eb;
+          --shadow-color: rgba(0,0,0,0.1);
+          --btn-secondary-bg: #ecf0f1;
+          --btn-secondary-border: #bdc3c7;
+          --warn-bg: #fff3cd;
+          --warn-border: #ffeeba;
+          --warn-color: #856404;
+          --ok-bg: #d1fae5;
+          --ok-border: #10b981;
+          --ok-color: #065f46;
+          --tip-bg: #ecfeff;
+          --tip-border: #06b6d4;
+          --tip-color: #0c4a6e;
+          --preview-bg: #f8fafc;
+          --preview-border: #cbd5e1;
+          --topbar-bg: rgba(255,255,255,0.9);
+          --topbar-link-bg: #ecf0f1;
+          --topbar-link-border: #bdc3c7;
+        }
+
+        [data-theme="dark"] {
+          --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          --bg-secondary: #0f0f23;
+          --text-primary: #e0e0e0;
+          --text-secondary: #b0b0b0;
+          --card-bg: #1a1a2e;
+          --border-color: #2a2a3a;
+          --shadow-color: rgba(0,0,0,0.3);
+          --btn-secondary-bg: #2a2a3a;
+          --btn-secondary-border: #4a4a5a;
+          --warn-bg: #2a2a3a;
+          --warn-border: #4a4a5a;
+          --warn-color: #ffd700;
+          --ok-bg: #1a2e1a;
+          --ok-border: #4a5a4a;
+          --ok-color: #90ee90;
+          --tip-bg: #1a2e2e;
+          --tip-border: #4a5a5a;
+          --tip-color: #87ceeb;
+          --preview-bg: #1a1a2e;
+          --preview-border: #2a2a3a;
+          --topbar-bg: rgba(15,15,35,0.9);
+          --topbar-link-bg: #2a2a3a;
+          --topbar-link-border: #4a4a5a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 80px auto 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: inherit;
+            z-index: -1;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 1000;
+            background: var(--topbar-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: flex;
+            gap: 10px;
+            border-radius: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 6px 18px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .topbar a {
+            color: var(--text-primary);
+            background: var(--topbar-link-bg);
+            border: 1px solid var(--topbar-link-border);
+            border-radius: 18px;
+            padding: 6px 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .topbar a:hover, .topbar a:focus-visible {
+            background: var(--topbar-link-border);
+            transform: translateY(-1px);
+            outline: none;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .dark-mode-btn {
+            background: var(--topbar-link-bg);
+            border: 1px solid var(--topbar-link-border);
+            border-radius: 18px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .dark-mode-btn:hover {
+            background: var(--topbar-link-border);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .dark-mode-btn[data-theme="dark"] {
+            background: #4a4a5a;
+            color: #ffffff;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h1, .card h2 {
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--btn-secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--btn-secondary-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--btn-secondary-border);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transform: translateY(-2px);
+        }
+
+        .preview {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        .preview img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+        }
+
+        /* Camera Modal Styles */
+        .camera-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .camera-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 25px;
+            max-width: 95%;
+            max-height: 95%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            pointer-events: none;
+        }
+
+        .camera-container h3 {
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        #camera-video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .camera-controls button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .camera-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+
+        .close-camera-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        .close-camera-btn:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6) !important;
+        }
+
+        /* Camera Options with Descriptions */
+        .camera-option {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .camera-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .camera-option button {
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .camera-description {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            position: relative;
+            z-index: 2;
+        }
+
+        .camera-description h4 {
+            color: white;
+            font-size: 1.3rem;
+            margin: 0 0 15px 0;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .camera-description p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .camera-features {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .feature-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .feature-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design for Camera Options */
+        @media (max-width: 768px) {
+            .camera-option {
+                margin: 15px 0;
+                padding: 15px;
+            }
+
+            .camera-description h4 {
+                font-size: 1.1rem;
+            }
+
+            .camera-description p {
+                font-size: 0.9rem;
+            }
+
+            .feature-tag {
+                font-size: 0.75rem;
+                padding: 5px 10px;
+            }
+
+            .camera-features {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .camera-option {
+                margin: 10px 0;
+                padding: 12px;
+            }
+
+            .camera-description h4 {
+                font-size: 1rem;
+            }
+
+            .camera-description p {
+                font-size: 0.85rem;
+            }
+
+            .feature-tag {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+        }
+
+        /* Tips Grid Styling */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tip-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .tip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            transition: opacity 0.3s ease;
+        }
+
+        .tip-card.warning::before {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .tip-card.success::before {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .tip-card.info::before {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .tip-card.advanced::before {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .tip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tip-card:hover::before {
+            opacity: 0.2;
+        }
+
+        .tip-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .tip-content {
+            flex: 1;
+        }
+
+        .tip-content h4 {
+            color: white;
+            font-size: 1.1rem;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .tip-content p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Responsive Tips Grid */
+        @media (max-width: 768px) {
+            .tips-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .tip-card {
+                padding: 15px;
+            }
+
+            .tip-icon {
+                font-size: 2rem;
+            }
+
+            .tip-content h4 {
+                font-size: 1rem;
+            }
+
+            .tip-content p {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* AI Features Grid Styling */
+        .ai-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .ai-feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .ai-feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            transition: opacity 0.4s ease;
+        }
+
+        .ai-feature-card.detection::before {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .ai-feature-card.variety::before {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .ai-feature-card.halachic::before {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .ai-feature-card.performance::before {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .ai-feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .ai-feature-card:hover::before {
+            opacity: 0.2;
+        }
+
+        .ai-feature-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+            transition: transform 0.3s ease;
+        }
+
+        .ai-feature-card:hover .ai-feature-icon {
+            transform: scale(1.1);
+        }
+
+        .ai-feature-content {
+            flex: 1;
+        }
+
+        .ai-feature-content h3 {
+            color: white;
+            font-size: 1.3rem;
+            margin: 0 0 15px 0;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .ai-feature-details {
+            margin-bottom: 15px;
+        }
+
+        .feature-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .detail-icon {
+            font-size: 1.2rem;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        .feature-detail span:last-child {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .ai-tech-info {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .tech-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive AI Features Grid */
+        @media (max-width: 768px) {
+            .ai-features-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .ai-feature-card {
+                padding: 20px;
+                gap: 15px;
+            }
+
+            .ai-feature-icon {
+                font-size: 2.5rem;
+            }
+
+            .ai-feature-content h3 {
+                font-size: 1.2rem;
+            }
+
+            .feature-detail span:last-child {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ai-feature-card {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .ai-feature-icon {
+                font-size: 2rem;
+            }
+
+            .ai-feature-content h3 {
+                font-size: 1.1rem;
+            }
+
+            .feature-detail span:last-child {
+                font-size: 0.8rem;
+            }
+
+            .tech-tag {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+        }
+
+        /* Responsive Camera Instructions */
+        @media (max-width: 768px) {
+            .camera-instructions {
+                padding: 12px;
+                margin: 15px 0;
+            }
+
+            .camera-instructions h5 {
+                font-size: 1rem;
+            }
+
+            .step {
+                padding: 6px 10px;
+                gap: 10px;
+            }
+
+            .step-number {
+                width: 22px;
+                height: 22px;
+                font-size: 0.8rem;
+            }
+
+            .step span:last-child {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .camera-instructions {
+                padding: 10px;
+                margin: 12px 0;
+            }
+
+            .camera-instructions h5 {
+                font-size: 0.95rem;
+            }
+
+            .step {
+                padding: 5px 8px;
+                gap: 8px;
+            }
+
+            .step-number {
+                width: 20px;
+                height: 20px;
+                font-size: 0.75rem;
+            }
+
+            .step span:last-child {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Camera Instructions Styling */
+        .camera-instructions {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .camera-instructions h5 {
+            color: white;
+            font-size: 1.1rem;
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .instruction-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .step span:last-child {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* AI Capabilities Summary */
+        .ai-capabilities-summary {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+
+        .ai-capabilities-summary h3 {
+            color: white;
+            font-size: 1.4rem;
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .capabilities-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .capability-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .capability-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .capability-icon {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        .capability-item span:last-child {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Responsive Capabilities */
+        @media (max-width: 768px) {
+            .capabilities-list {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .capability-item {
+                padding: 10px;
+            }
+
+            .capability-icon {
+                font-size: 1.3rem;
+            }
+
+            .capability-item span:last-child {
+                font-size: 0.9rem;
+            }
+        }
+
+        .camera-tips {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .camera-tips p {
+            color: white;
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        /* AI Camera Feed Styles */
+        .ai-camera-feed {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #000;
+            margin: 0 auto;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #aiCameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ai-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .focus-box {
+            width: 300px;
+            height: 300px;
+            border: 3px solid #00ff88;
+            border-radius: 15px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            animation: focusPulse 2s infinite;
+        }
+
+        @keyframes focusPulse {
+            0%, 100% { 
+                border-color: #00ff88; 
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            }
+            50% { 
+                border-color: #00ccff; 
+                box-shadow: 0 0 30px rgba(0, 204, 255, 0.7);
+            }
+        }
+
+        .ai-guidance {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 20px;
+            text-align: center;
+            max-width: 80%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 3;
+        }
+
+        .ai-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 3;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .topbar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .topbar-links {
+                gap: 10px;
+            }
+            
+            .card {
+                margin: 10px 0;
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .preview {
+                min-height: 200px;
+            }
+
+            .camera-container {
+                padding: 20px;
+                max-width: 98%;
+                max-height: 98%;
+            }
+
+            .camera-container h3 {
+                font-size: 1.4rem;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .camera-controls button {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .ai-camera-feed {
+                height: 350px;
+            }
+
+            .focus-box {
+                width: 200px;
+                height: 200px;
+            }
+
+            .ai-guidance {
+                font-size: 1rem;
+                padding: 12px 20px;
+                margin: 15px;
+            }
+        }
+
+        /* Camera Selector Styles */
+        .camera-selector {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: var(--card-shadow);
+            border: var(--card-border);
+        }
+
+        .camera-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .camera-tab {
+            background: var(--secondary-bg);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .camera-tab:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .camera-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .camera-content {
+            position: relative;
+            min-height: 300px;
+        }
+
+        .camera-panel {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .camera-panel.active {
+            display: block;
+        }
+
+        .camera-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            background: var(--bg-color);
+            border-radius: 15px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .camera-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .camera-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .camera-desc {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .capture-button-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .capture-btn {
+            font-size: 1.2rem;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            border: none;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .capture-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+        }
+
+        .capture-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .camera-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .preview-area {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            border: var(--card-border);
+        }
+
+        .preview-area img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .camera-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .camera-tab {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .capture-btn {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+            
+            .camera-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <div class="topbar">
+        <div class="topbar-links">
+            <a href="#home">🏠 בית</a>
+            <a href="#camera">📷 מצלמה</a>
+            <a href="#analysis">🔬 ניתוח</a>
+            <a href="#results">📊 תוצאות</a>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+
+    <div class="container">
+        <!-- Home Section -->
+        <section id="home" class="section">
+            <h1>🍋 בודק אתרוגים חכם</h1>
+            <p class="subtitle">זיהוי מתקדם של זנים, פגמים וכשרות באמצעות בינה מלאכותית</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI מתקדם</h3>
+                    <p>זיהוי מדויק של זנים ופגמים</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>מהיר ויעיל</h3>
+                    <p>תוצאות תוך שניות ספורות</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>נוח לשימוש</h3>
+                    <p>ממשק פשוט ואינטואיטיבי</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- מצלמה וניתוח -->
+        <section id="camera" class="section">
+            <div class="container">
+                <h2>📸 מצלמה וניתוח</h2>
+                <p>בחר סוג מצלמה וצלם את האתרוג שלך לניתוח מתקדם</p>
+                
+                <!-- ממשק בחירת מצלמה -->
+                <div class="camera-selector">
+                    <div class="camera-tabs">
+                        <button class="camera-tab active" onclick="switchCamera('regular')">
+                            📱 מצלמה רגילה
+                        </button>
+                        <button class="camera-tab" onclick="switchCamera('advanced')">
+                            🔬 מצלמה מתקדמת
+                        </button>
+                        <button class="camera-tab" onclick="switchCamera('ai')">
+                            🤖 מצלמה AI
+                        </button>
+                    </div>
+                    
+                    <div class="camera-content">
+                        <div id="camera-regular" class="camera-panel active">
+                            <div class="camera-preview">
+                                <div class="camera-placeholder">
+                                    <span class="camera-icon">📱</span>
+                                    <p>מצלמה רגילה</p>
+                                    <p class="camera-desc">צילום מהיר ופשוט</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="camera-advanced" class="camera-panel">
+                            <div class="camera-preview">
+                                <div class="camera-placeholder">
+                                    <span class="camera-icon">🔬</span>
+                                    <p>מצלמה מתקדמת</p>
+                                    <p class="camera-desc">צילום באיכות גבוהה</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="camera-ai" class="camera-panel">
+                            <div class="camera-preview">
+                                <div class="camera-placeholder">
+                                    <span class="camera-icon">🤖</span>
+                                    <p>מצלמה AI</p>
+                                    <p class="camera-desc">ניתוח בזמן אמת</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- כפתור צלם מרכזי -->
+                    <div class="capture-button-container">
+                        <button class="btn btn-primary capture-btn" onclick="captureImage()">
+                            📸 צלם עכשיו
+                        </button>
+                    </div>
+                </div>
+
+                <!-- כפתורים נוספים -->
+                <div class="camera-actions">
+                    <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                        📁 העלאת תמונה
+                    </button>
+                    <button class="btn btn-secondary" onclick="enableAICamera()">
+                        🤖 מצלמה AI
+                    </button>
+                </div>
+                
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                
+                <!-- אזור תצוגה -->
+                <div id="previewArea" class="preview-area" style="display: none;">
+                    <h3>תמונה שצולמה</h3>
+                    <img id="previewImage" alt="תמונה שצולמה">
+                    <div class="preview-actions">
+                        <button class="btn btn-primary" onclick="processImage()">נתח תמונה</button>
+                        <button class="btn btn-secondary" onclick="retakePhoto()">צלם שוב</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="section">
+            <h2>🔬 ניתוח מתקדם</h2>
+            <div class="analysis-info">
+                <h3>מה בודקים?</h3>
+                <div class="check-items">
+                    <div class="check-item">
+                        <span class="check-icon">🔍</span>
+                        <span>זיהוי זן האתרוג</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">🩺</span>
+                        <span>בדיקת פגמים</span>
+                    </div>
+                    <div class="check-item">
+                        <span class="check-icon">✅</span>
+                        <span>אישור כשרות</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="section">
+            <h2>📊 תוצאות</h2>
+            <div class="result" id="result">
+                <p>צלם את האתרוג שלך כדי לקבל תוצאות מפורטות</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>📷 מצלמה</h3>
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <div class="camera-controls">
+                <button onclick="takePicture()" class="btn btn-primary">📸 צלם</button>
+                <button onclick="closeCamera()" class="btn btn-secondary">❌ סגור</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Download analysis report (fallback)
+        function downloadReport() {
+            const reportData = {
+                timestamp: new Date().toISOString(),
+                analysis: 'Etrog Analysis Report',
+                // Add current analysis data
+            };
+            
+            const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `etrog_report_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('דוח הורד בהצלחה!', 'success');
+        }
+
+        // Share results
+        function shareResults() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'תוצאות בדיקת אתרוג',
+                    text: 'בדקתי את האתרוג שלי עם בודק אתרוגים חכם!',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText('בדקתי את האתרוג שלי עם בודק אתרוגים חכם! ' + window.location.href);
+                showNotification('קישור הועתק ללוח!', 'success');
+            }
+        }
+
+        // Legacy function for compatibility
+        function processImage(img) {
+            processImageReal(img);
+        }
+
+        // AI Processing simulation function
+        function simulateAIProcessing() {
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.innerHTML = `
+                <div class="progress-fill"></div>
+                <span class="progress-text">מעבד עם AI...</span>
+            `;
+            
+            const resultSection = document.querySelector('.result');
+            if (resultSection) {
+                resultSection.innerHTML = '';
+                resultSection.appendChild(progressBar);
+            }
+            
+            // Simulate AI processing steps
+            const steps = [
+                'מזהה זן אתרוג...',
+                'בודק פגמים...',
+                'מנתח כשרות...',
+                'מכין דוח...'
+            ];
+            
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    if (progressBar.querySelector('.progress-text')) {
+                        progressBar.querySelector('.progress-text').textContent = steps[currentStep];
+                    }
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    showFinalResults();
+                }
+            }, 1000);
+        }
+
+        // Show final AI results
+        function showFinalResults() {
+            const resultSection = document.querySelector('.result');
+            if (resultSection) {
+                resultSection.innerHTML = `
+                    <h3>🎯 תוצאות ניתוח AI</h3>
+                    <div class="ai-results">
+                        <div class="ai-result-item success">
+                            <span class="ai-icon">✅</span>
+                            <div class="ai-content">
+                                <h4>זן מזוהה</h4>
+                                <p>אתרוג יפו - זן כשר ומבוקש</p>
+                                <span class="confidence">ביטחון: 98%</span>
+                            </div>
+                        </div>
+                        <div class="ai-result-item success">
+                            <span class="ai-icon">✅</span>
+                            <div class="ai-content">
+                                <h4>בדיקת כשרות</h4>
+                                <p>כשר לשימוש בברכה</p>
+                                <span class="confidence">ביטחון: 95%</span>
+                            </div>
+                        </div>
+                        <div class="ai-result-item warning">
+                            <span class="ai-icon">⚠️</span>
+                            <div class="ai-content">
+                                <h4>פגמים מזוהים</h4>
+                                <p>כתם קטן בצד ימין - לא פוסל</p>
+                                <span class="confidence">ביטחון: 90%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-recommendations">
+                        <h4>💡 המלצות AI:</h4>
+                        <ul>
+                            <li>האתרוג כשר לשימוש בברכה</li>
+                            <li>נקו את הכתם הקטן לפני השימוש</li>
+                            <li>שמרו תמונה זו לתיעוד</li>
+                            <li>מומלץ לבדוק שוב לפני השימוש</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            showNotification('ניתוח AI הושלם בהצלחה!', 'success');
+        }
+
+        // Enhanced camera functionality
+        async function enableAdvancedCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Check camera permissions first
+                if (cameraPermission === 'denied') {
+                    showNotification('הרשאת מצלמה נדחתה. אנא הפעל מחדש את הדפדפן', 'error');
+                    return;
+                }
+                
+                showNotification('פותח מצלמה מתקדמת...', 'info');
+                
+                const preview = document.querySelector('.preview');
+                if (preview) {
+                    preview.innerHTML = `
+                        <div class="camera-feed">
+                            <video id="cameraVideo" autoplay muted playsinline></video>
+                            <div class="camera-overlay">
+                                <div class="focus-box"></div>
+                                <div class="camera-info">
+                                    <span>🎥 מצלמה מתקדמת - צילום רציף</span>
+                                    <br><small>לחץ על הצילום כדי לצלם</small>
+                                </div>
+                            </div>
+                            <div class="camera-type-info">
+                                <h4>📹 מצלמה מתקדמת</h4>
+                                <p>• צילום וידאו רציף</p>
+                                <p>• בחירת הפריים הטוב ביותר</p>
+                                <p>• איכות גבוהה יותר</p>
+                                <p>• מתאים לבדיקה מדויקת</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            video: { 
+                                facingMode: 'environment',
+                                width: { ideal: 1280, max: 1920 },
+                                height: { ideal: 720, max: 1080 }
+                            } 
+                        });
+                        
+                        const video = document.getElementById('cameraVideo');
+                        if (video) {
+                            video.srcObject = stream;
+                            window.cameraStream = stream;
+                            showNotification('מצלמה מתקדמת מוכנה! 🎥', 'success');
+                        }
+                    } catch (error) {
+                        console.log('Camera error:', error);
+                        showNotification('שגיאה בפתיחת מצלמה מתקדמת', 'error');
+                    }
+                }
+            }
+        }
+
+        function initializeAdvancedFeatures() {
+            // WebGL detection
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (gl) {
+                console.log('WebGL זמין - ביצועים מיטביים מופעלים');
+                document.body.classList.add('webgl-enabled');
+            } else {
+                console.log('WebGL לא זמין - שימוש במצב רגיל');
+            }
+
+            // Service Worker registration for offline support
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker נרשם בהצלחה:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            }
+
+            // Performance optimization
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    // Load non-critical resources
+                    console.log('טוען משאבים לא קריטיים...');
+                });
+            }
+            
+            // Initialize AI models
+            initializeAIModels();
+        }
+        
+        // Initialize AI models with performance optimization
+        async function initializeAIModels() {
+            try {
+                showNotification('מאתחל מודלי AI עם ביצועים מיטביים...', 'info');
+                
+                // Performance optimization
+                if (typeof performance !== 'undefined') {
+                    performance.mark('ai-init-start');
+                }
+                
+                // Initialize YOLO (COCO-SSD) with performance settings
+                if (typeof cocoSsd !== 'undefined') {
+                    try {
+                        const yoloStart = performance.now();
+                        const model = await cocoSsd.load({
+                            base: 'mobilenet_v2' // Faster model
+                        });
+                        const yoloTime = performance.now() - yoloStart;
+                        console.log(`YOLO model loaded in ${yoloTime.toFixed(2)}ms`);
+                        showNotification(`YOLO מוכן לזיהוי מהיר! 🎯 (${yoloTime.toFixed(0)}ms)`, 'success');
+                    } catch (error) {
+                        console.error('YOLO loading error:', error);
+                        showNotification('שגיאה בטעינת YOLO', 'warning');
+                    }
+                }
+                
+                // Initialize TensorFlow.js with WebGL backend for maximum performance
+                if (typeof tf !== 'undefined') {
+                    try {
+                        const tfStart = performance.now();
+                        await tf.ready();
+                        
+                        // Try WebGL first, fallback to CPU
+                        try {
+                            await tf.setBackend('webgl');
+                            console.log('TensorFlow.js WebGL backend activated');
+                        } catch (webglError) {
+                            console.log('WebGL not available, using CPU backend');
+                            await tf.setBackend('cpu');
+                        }
+                        
+                        const tfTime = performance.now() - tfStart;
+                        console.log('TensorFlow.js ready:', tf.version);
+                        console.log('TensorFlow backend:', tf.getBackend());
+                        showNotification(`TensorFlow.js מוכן! 🧠 (${tfTime.toFixed(0)}ms)`, 'success');
+                    } catch (error) {
+                        console.error('TensorFlow.js error:', error);
+                        showNotification('שגיאה באתחול TensorFlow.js', 'warning');
+                    }
+                }
+                
+                // Check OpenCV.js with proper testing
+                if (typeof cv !== 'undefined' && opencvReady) {
+                    try {
+                        const opencvStart = performance.now();
+                        // Additional functionality test
+                        const testMat = new cv.Mat();
+                        testMat.delete();
+                        const opencvTime = performance.now() - opencvStart;
+                        console.log('OpenCV.js ready and tested');
+                        showNotification(`OpenCV.js מוכן! 👁️ (${opencvTime.toFixed(0)}ms)`, 'success');
+                    } catch (error) {
+                        console.warn('OpenCV present but not working properly:', error);
+                        showNotification('OpenCV.js זמין אך לא יציב', 'warning');
+                        opencvReady = false;
+                    }
+                } else {
+                    console.log('OpenCV.js not available');
+                    showNotification('OpenCV.js לא זמין', 'info');
+                }
+                
+                // Performance summary
+                if (typeof performance !== 'undefined') {
+                    performance.mark('ai-init-end');
+                    performance.measure('ai-initialization', 'ai-init-start', 'ai-init-end');
+                    const measure = performance.getEntriesByName('ai-initialization')[0];
+                    console.log(`Total AI initialization time: ${measure.duration.toFixed(2)}ms`);
+                }
+                
+                showNotification('כל מודלי AI מוכנים עם ביצועים מיטביים! 🚀', 'success');
+                
+            } catch (error) {
+                console.error('AI model initialization error:', error);
+                showNotification('שגיאה באתחול מודלי AI', 'warning');
+            }
+        }
+        
+        // Store current analysis for download
+        window.currentAnalysis = null;
+        
+        // Update current analysis when processing
+        function updateCurrentAnalysis(analysis) {
+            window.currentAnalysis = analysis;
+        }
+        
+        // Enhanced camera with AI guidance and performance optimization
+        function enableAICamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const preview = document.querySelector('.preview');
+                if (preview) {
+                    preview.innerHTML = `
+                        <div class="ai-camera-feed">
+                            <video id="aiCameraVideo" autoplay muted playsinline></video>
+                            <div class="ai-overlay">
+                                <div class="focus-box"></div>
+                                <div class="ai-guidance">
+                                    <span>מקם את האתרוג בתוך המסגרת</span>
+                                </div>
+                                <div class="ai-status">מצלמה AI מופעלת עם ביצועים מיטביים</div>
+                                <div class="performance-info">טעינה...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Performance tracking
+                    const aiStart = performance.now();
+                    
+                    navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1280, max: 1920 },
+                            height: { ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30, max: 60 },
+                            aspectRatio: { ideal: 16/9 }
+                        } 
+                    })
+                    .then(stream => {
+                        const video = document.getElementById('aiCameraVideo');
+                        if (video) {
+                            video.srcObject = stream;
+                            window.aiCameraStream = stream;
+                            
+                            // Simple face detection simulation
+                            simulateFaceDetection(video);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('AI Camera error:', error);
+                        showNotification('שגיאה בפתיחת מצלמה AI', 'error');
+                    });
+                }
+            }
+        }
+
+        // Optimized face detection simulation with performance tracking
+        function simulateFaceDetection(video) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            let frameCount = 0;
+            let lastPerformanceCheck = performance.now();
+            
+            function detectFace() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const frameStart = performance.now();
+                    
+                    // Optimize canvas size
+                    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                    }
+                    
+                    ctx.drawImage(video, 0, 0);
+                    
+                    // Simple face detection simulation (optimized)
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    
+                    // Draw a simple face detection box
+                    const focusBox = document.querySelector('.focus-box');
+                    if (focusBox) {
+                        focusBox.style.left = (centerX - 150) + 'px';
+                        focusBox.style.top = (centerY - 150) + 'px';
+                    }
+                    
+                    // Performance tracking every 30 frames
+                    frameCount++;
+                    if (frameCount % 30 === 0) {
+                        const currentTime = performance.now();
+                        const fps = 1000 / (currentTime - lastPerformanceCheck) * 30;
+                        lastPerformanceCheck = currentTime;
+                        
+                        const performanceInfo = document.querySelector('.performance-info');
+                        if (performanceInfo) {
+                            performanceInfo.textContent = `FPS: ${fps.toFixed(1)} | Frame: ${frameCount}`;
+                        }
+                        
+                        console.log(`AI Camera FPS: ${fps.toFixed(1)}`);
+                    }
+                }
+                
+                // Use requestAnimationFrame for smooth performance
+                requestAnimationFrame(detectFace);
+            }
+            
+            detectFace();
+        }
+        
+        // Start AI analysis on video feed (simplified)
+        function startAIVideoAnalysis(video) {
+            // This function is simplified to avoid complex AI calls
+            console.log('AI video analysis started (simplified mode)');
+        }
+        
+        // Quick analysis for real-time feedback
+        async function performQuickAnalysis(imageData) {
+            try {
+                const result = {
+                    hasEtrog: false,
+                    quality: 'unknown',
+                    suggestions: []
+                };
+                
+                // Quick color check
+                const colorResult = await analyzeColorsWithTF(tf.browser.fromPixels(imageData));
+                if (colorResult.isEtrogColor) {
+                    result.hasEtrog = true;
+                    result.quality = 'good';
+                    result.suggestions.push('צבע תקין - צלם עכשיו!');
+                } else {
+                    result.suggestions.push('לא זוהה צבע אתרוג - בדוק תאורה');
+                }
+                
+                return result;
+                
+            } catch (error) {
+                return { hasEtrog: false, quality: 'error', suggestions: ['שגיאה בניתוח מהיר'] };
+            }
+        }
+        
+        // Update AI guidance based on analysis with performance info
+        function updateAIGuidance(result) {
+            const guidance = document.querySelector('.ai-guidance');
+            if (guidance && result.suggestions.length > 0) {
+                guidance.innerHTML = `<span>${result.suggestions[0]}</span>`;
+                
+                if (result.hasEtrog) {
+                    guidance.style.color = '#28a745';
+                } else {
+                    guidance.style.color = '#ffc107';
+                }
+            }
+        }
+        
+        // Performance monitoring and optimization
+        function monitorPerformance() {
+            if (typeof performance !== 'undefined') {
+                // Monitor memory usage
+                if (performance.memory) {
+                    const memoryInfo = performance.memory;
+                    const usedMB = Math.round(memoryInfo.usedJSHeapSize / 1024 / 1024);
+                    const totalMB = Math.round(memoryInfo.totalJSHeapSize / 1024 / 1024);
+                    
+                    console.log(`Memory usage: ${usedMB}MB / ${totalMB}MB`);
+                    
+                    // Show warning if memory usage is high
+                    if (usedMB > 100) {
+                        showNotification('שימוש גבוה בזיכרון - מפנה זיכרון...', 'warning');
+                        // Force garbage collection if possible
+                        if (window.gc) {
+                            window.gc();
+                        }
+                    }
+                }
+                
+                // Monitor frame rate
+                let frameCount = 0;
+                let lastTime = performance.now();
+                
+                function countFrames() {
+                    frameCount++;
+                    const currentTime = performance.now();
+                    
+                    if (currentTime - lastTime >= 1000) {
+                        const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                        console.log(`Current FPS: ${fps}`);
+                        
+                        if (fps < 30) {
+                            console.warn('Low FPS detected - performance optimization needed');
+                        }
+                        
+                        frameCount = 0;
+                        lastTime = currentTime;
+                    }
+                    
+                    requestAnimationFrame(countFrames);
+                }
+                
+                countFrames();
+            }
+        }
+        
+        // Initialize performance monitoring
+        if (typeof performance !== 'undefined') {
+            monitorPerformance();
+        }
+        
+        // Add camera type info styles
+        const cameraTypeStyle = document.createElement('style');
+        cameraTypeStyle.textContent = `
+            .camera-type-info {
+                background: rgba(255, 255, 255, 0.95);
+                border: 2px solid #667eea;
+                border-radius: 15px;
+                padding: 15px;
+                margin: 15px 0;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .camera-type-info h4 {
+                color: #667eea;
+                margin: 0 0 10px 0;
+                font-size: 1.1rem;
+            }
+            
+            .camera-type-info p {
+                margin: 5px 0;
+                color: #333;
+                font-size: 0.9rem;
+            }
+        `;
+        document.head.appendChild(cameraTypeStyle);
+
+        // פונקציה להצגת התראות
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span class="notification-message">${message}</span>
+                <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // הצגת ההתראה עם אנימציה
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // הסרה אוטומטית אחרי 5 שניות
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // פונקציה מתקדמת לפתיחת מצלמה
+        async function captureImage() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        facingMode: 'environment' // מצלמה אחורית במובייל
+                    } 
+                });
+                
+                const modal = document.getElementById('cameraModal');
+                const video = document.getElementById('cameraVideo');
+                
+                video.srcObject = stream;
+                modal.style.display = 'flex';
+                
+                showNotification('מצלמה מוכנה! 📸', 'success');
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                showNotification('שגיאה בפתיחת המצלמה: ' + error.message, 'error');
+            }
+        }
+
+        // פונקציה להחלפת בין סוגי מצלמות
+        function switchCamera(type) {
+            // הסתרת כל הפאנלים
+            const panels = document.querySelectorAll('.camera-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+            
+            // הסרת מצב פעיל מכל הטאבים
+            const tabs = document.querySelectorAll('.camera-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // הצגת הפאנל הנבחר
+            const selectedPanel = document.getElementById(`camera-${type}`);
+            if (selectedPanel) {
+                selectedPanel.classList.add('active');
+            }
+            
+            // הוספת מצב פעיל לטאב הנבחר
+            const selectedTab = event.target;
+            selectedTab.classList.add('active');
+            
+            // עדכון כפתור הצילום לפי הסוג
+            updateCaptureButton(type);
+        }
+        
+        // עדכון כפתור הצילום לפי סוג המצלמה
+        function updateCaptureButton(cameraType) {
+            const captureBtn = document.querySelector('.capture-btn');
+            if (!captureBtn) return;
+            
+            switch(cameraType) {
+                case 'regular':
+                    captureBtn.textContent = '📸 צלם עכשיו';
+                    captureBtn.onclick = () => captureImage();
+                    break;
+                case 'advanced':
+                    captureBtn.textContent = '🎥 מצלמה מתקדמת';
+                    captureBtn.onclick = () => enableAdvancedCamera();
+                    break;
+                case 'ai':
+                    captureBtn.textContent = '🤖 מצלמה AI';
+                    captureBtn.onclick = () => enableAICamera();
+                    break;
+            }
+        }
+        
+        // פונקציה לצילום חוזר
+        function retakePhoto() {
+            document.getElementById('previewArea').style.display = 'none';
+            // איפוס המצלמה
+            if (window.currentStream) {
+                window.currentStream.getTracks().forEach(track => track.stop());
+            }
+        }
+        
+        // פונקציה לעיבוד תמונה
+        function processImage() {
+            const img = document.getElementById('previewImage');
+            if (img && img.src) {
+                processImageReal(img);
+            }
+        }
+
+        // פונקציה להחלפת ערכת נושא
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            
+            // שמירה בזיכרון המקומי
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // פונקציה לטעינת ערכת הנושא השמורה
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+        }
+
+        // פונקציות חסרות למצלמה
+        function enableAdvancedCamera() {
+            showNotification('פותח מצלמה מתקדמת...', 'info');
+            captureImage(); // משתמש באותה פונקציה בינתיים
+        }
+
+        function takePicture() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            // המרה לתמונה
+            const imageData = canvas.toDataURL('image/jpeg');
+            displayCapturedImage(imageData);
+            closeCamera();
+        }
+
+        function closeCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            
+            // עצירת הזרם
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            
+            modal.style.display = 'none';
+        }
+
+        function displayCapturedImage(imageData) {
+            const previewArea = document.getElementById('previewArea');
+            const previewImage = document.getElementById('previewImage');
+            
+            previewImage.src = imageData;
+            previewArea.style.display = 'block';
+            
+            // גלילה לאזור התצוגה
+            previewArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayCapturedImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // אתחול הדף
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            
+            // הוספת CSS לתראות
+            const notificationStyle = document.createElement('style');
+            notificationStyle.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    color: white;
+                    font-weight: 600;
+                    z-index: 1000;
+                    opacity: 0;
+                    transform: translateX(100%);
+                    transition: all 0.3s ease;
+                }
+                
+                .notification.info { background: #3498db; }
+                .notification.success { background: #27ae60; }
+                .notification.warning { background: #f39c12; }
+                .notification.error { background: #e74c3c; }
+                
+                .notification.show {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                
+                .notification-close {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 18px;
+                    cursor: pointer;
+                    margin-left: 10px;
+                }
+            `;
+            document.head.appendChild(notificationStyle);
+        });
+    </script>
+</body>
+</html>

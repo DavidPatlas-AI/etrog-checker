@@ -1,0 +1,33 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Types:
+# feat:     A new feature
+# fix:      A bug fix
+# docs:     Documentation only changes
+# style:    Changes that do not affect the meaning of the code
+# refactor: A code change that neither fixes a bug nor adds a feature
+# perf:     A code change that improves performance
+# test:     Adding missing tests or correcting existing tests
+# chore:    Changes to the build process or auxiliary tools
+
+# Scopes:
+# app:      Application specific changes
+# ui:       UI/UX related changes
+# api:      API related changes
+# db:       Database related changes
+# auth:     Authentication related changes
+# config:   Configuration related changes
+
+# Examples:
+# feat(app): add camera functionality
+# fix(ui): resolve sidebar navigation issue
+# docs: update README with installation instructions
+# style: format code with prettier
+# refactor(api): simplify authentication logic
+# perf: optimize image processing
+# test: add unit tests for etrog validation
+# chore: update dependencies 

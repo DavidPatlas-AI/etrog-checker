@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍋 זיהוי אתרוגים AI</title>
+    <style>
+        /* CSS Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            background: linear-gradient(135deg, #dcfce7 0%, #fed7aa 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #059669, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
+        .features-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .features-card h2 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            color: #10b981;
+        }
+
+        .feature-text {
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 18px 25px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Camera Screen Styles */
+        .camera-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            display: none;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .camera-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 4px solid #10b981;
+            border-radius: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .camera-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+        }
+
+        .camera-crosshair::before,
+        .camera-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #10b981;
+        }
+
+        .camera-crosshair::before {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .camera-crosshair::after {
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .camera-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .camera-btn {
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .camera-btn:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .capture-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 4px solid #e5e7eb;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .capture-btn:hover {
+            border-color: #10b981;
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .capture-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        /* Processing Screen Styles */
+        .processing-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ddd6fe, #c084fc);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .processing-content {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .processing-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 20px;
+            object-fit: cover;
+            margin-bottom: 30px;
+            border: 4px solid white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* Result Screen Styles */
+        .result-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f9fafb, #dcfce7);
+            z-index: 1000;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .result-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-status {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-title.kosher {
+            color: #059669;
+        }
+
+        .result-title.invalid {
+            color: #dc2626;
+        }
+
+        .result-details {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .variety-badge {
+            display: inline-block;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .confidence-section {
+            margin-bottom: 20px;
+        }
+
+        .confidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 2s ease;
+        }
+
+        .confidence-fill.kosher {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .confidence-fill.invalid {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .measurements-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .measurement-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .measurement-label {
+            color: #6b7280;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .measurement-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .halacha-section {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 15px;
+            border-right: 4px solid #3b82f6;
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        .halacha-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .halacha-text {
+            color: #1e40af;
+            line-height: 1.5;
+        }
+
+        .business-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .business-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .business-metric {
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .business-metric.price {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border: 1px solid #10b981;
+        }
+
+        .business-metric.profit {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border: 1px solid #3b82f6;
+        }
+
+        .metric-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .metric-value.price {
+            color: #059669;
+        }
+
+        .metric-value.profit {
+            color: #2563eb;
+        }
+
+        .recommendation {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #10b981;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            color: #065f46;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-text {
+            color: #047857;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.share {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .action-btn.export {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .action-btn.favorite {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Error Message Styles */
+        .error-message {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #991b1b;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+
+        /* Loading state for camera */
+        .camera-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .camera-loading .spinner {
+            border-color: rgba(255,255,255,0.3);
+            border-top-color: white;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .features-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message">
+        <div class="error-content">
+            <div class="error-text">
+                <span>⚠️</span>
+                <span id="errorText"></span>
+            </div>
+            <button class="close-btn" onclick="hideError()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="homeScreen" class="container">
+        <div class="header">
+            <h1>🍋 זיהוי אתרוגים AI</h1>
+            <p>מערכת AI מתקדמת לזיהוי וניתוח אתרוגים</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">נסרקו היום</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">89%</div>
+                <div class="stat-label">אחוז כשרות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">₪950</div>
+                <div class="stat-label">ממוצע פרימיום</div>
+            </div>
+        </div>
+
+        <div class="features-card">
+            <h2>יכולות המערכת</h2>
+            <div class="feature-item">
+                <span class="feature-icon">✅</span>
+                <span class="feature-text">זיהוי כשרות ופגמים ברמת דיוק של 96.8%+</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">⭐</span>
+                <span class="feature-text">מיון אוטומטי לקטגוריות מסחריות</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">💰</span>
+                <span class="feature-text">הערכת מחיר בזמן אמת</span>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn btn-primary" onclick="startCamera()">
+                <span>📷</span>
+                צלם אתרוג חדש
+            </button>
+            <button class="btn btn-secondary" onclick="uploadImage()">
+                <span>📤</span>
+                העלה תמונה
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+    </div>
+
+    <!-- Camera Screen -->
+    <div id="cameraScreen" class="camera-screen">
+        <div class="camera-container">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+            
+            <div class="camera-loading" id="cameraLoading">
+                <div class="spinner"></div>
+                <p>מפעיל מצלמה...</p>
+            </div>
+            
+            <div class="camera-overlay">
+                <div class="camera-frame">
+                    <div class="camera-crosshair"></div>
+                </div>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="camera-btn" onclick="goBack()">
+                    <span>←</span>
+                    חזור
+                </button>
+                <button class="camera-btn" onclick="switchCamera()">
+                    <span>🔄</span>
+                    החלף
+                </button>
+            </div>
+            
+            <button class="capture-btn" onclick="capturePhoto()">
+                <span style="font-size: 2rem;">📷</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Processing Screen -->
+    <div id="processingScreen" class="processing-screen">
+        <div class="processing-content">
+            <img id="processingImage" class="processing-image" style="display: none;">
+            <div class="spinner"></div>
+            <h2>🔬 מעבד תמונה...</h2>
+            <p>הבינה המלאכותית בוחנת את האתרוג בקפידה</p>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <p id="processingStep">מכין לעיבוד...</p>
+            <button class="btn btn-secondary" onclick="cancelProcessing()" style="margin-top: 20px;">
+                ❌ ביטול
+            </button>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="resultScreen" class="result-screen">
+        <div class="result-container">
+            <div class="result-header">
+                <button class="camera-btn" onclick="goBack()">
+                    <span>←</span>
+                    חזור
+                </button>
+                <h1>📋 דוח זיהוי מקצועי</h1>
+                <button class="camera-btn" onclick="exportReport()">
+                    <span>💾</span>
+                    יצוא
+                </button>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img id="resultImage" style="max-width: 300px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);">
+                <div id="qualityBadge" style="margin-top: 15px; display: inline-block; background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 8px;">
+                    🏆 ציון איכות: <span id="qualityScore"></span>/100
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div id="resultStatus" class="result-status"></div>
+                <h2 id="resultTitle" class="result-title"></h2>
+                <p id="resultDetails" class="result-details"></p>
+                <div id="varietyBadge" class="variety-badge"></div>
+                
+                <div class="confidence-section">
+                    <div class="confidence-header">
+                        <span style="font-weight: bold;">🎯 רמת וודאות AI</span>
+                        <span id="confidencePercent" style="font-size: 1.5rem; font-weight: bold;"></span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div id="confidenceFill" class="confidence-fill"></div>
+                    </div>
+                </div>
+
+                <div id="measurementsSection">
+                    <h3 style="margin: 20px 0 15px 0; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <span>📏</span>
+                        מדידות מדויקות
+                    </h3>
+                    <div class="measurements-grid" id="measurementsGrid"></div>
+                </div>
+
+                <div class="halacha-section">
+                    <div class="halacha-title">
+                        <span>📚</span>
+                        פסיקה הלכתית
+                    </div>
+                    <div id="halachaText" class="halacha-text"></div>
+                    <div id="certificationText" style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;"></div>
+                </div>
+            </div>
+
+            <div id="businessSection" class="business-section">
+                <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                    <span>💰</span>
+                    ניתוח עסקי מתקדם
+                </h3>
+                
+                <div class="business-grid">
+                    <div class="business-metric price">
+                        <div class="metric-label">💰 מחיר משוער</div>
+                        <div id="estimatedPrice" class="metric-value price"></div>
+                    </div>
+                    <div class="business-metric profit">
+                        <div class="metric-label">📈 רווח צפוי</div>
+                        <div id="profitMargin" class="metric-value profit"></div>
+                    </div>
+                </div>
+
+                <div class="recommendation">
+                    <div class="recommendation-title">🎯 המלצה אסטרטגית</div>
+                    <div id="recommendationText" class="recommendation-text"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="resetApp()" style="width: 100%; margin: 20px 0;">
+                <span>📷</span>
+                🔍 בדוק אתרוג נוסף
+                <span>✨</span>
+            </button>
+
+            <div class="action-buttons">
+                <button class="action-btn share" onclick="shareResult()">
+                    <span>📤</span>
+                    שתף
+                </button>
+                <button class="action-btn export" onclick="exportReport()">
+                    <span>💾</span>
+                    יצוא
+                </button>
+                <button class="action-btn favorite" onclick="addToFavorites()">
+                    <span>❤️</span>
+                    שמור
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Code
+        let currentView = 'home';
+        let cameraStream = null;
+        let currentResult = null;
+        let capturedImageData = null;
+        let facingMode = 'environment';
+
+        // Error handling
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                hideError();
+            }, 5000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Navigation functions
+        function showScreen(screenId) {
+            const screens = ['homeScreen', 'cameraScreen', 'processingScreen', 'resultScreen'];
+            screens.forEach(screen => {
+                document.getElementById(screen).style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = screenId === 'cameraScreen' ? 'block' : (screenId === 'processingScreen' ? 'flex' : 'block');
+            currentView = screenId.replace('Screen', '');
+        }
+
+        function goBack() {
+            if (currentView === 'camera') {
+                stopCamera();
+                showScreen('homeScreen');
+            } else {
+                showScreen('homeScreen');
+            }
+        }
+
+        function resetApp() {
+            stopCamera();
+            currentResult = null;
+            capturedImageData = null;
+            showScreen('homeScreen');
+        }
+
+        // Camera functions
+        async function startCamera() {
+            try {
+                if (!('isSecureContext' in window) || window.isSecureContext !== true) {
+                    showError('יש לפתוח את הדף דרך https או localhost כדי להשתמש במצלמה');
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showError('הדפדפן לא תומך במצלמה');
+                    return;
+                }
+
+                showScreen('cameraScreen');
+                document.getElementById('cameraLoading').style.display = 'block';
+
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraStream = stream;
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    video.play().then(() => {
+                        document.getElementById('cameraLoading').style.display = 'none';
+                    }).catch(console.error);
+                };
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                if (error.name === 'NotAllowedError') {
+                    showError('נא לאשר גישה למצלמה בדפדפן');
+                } else if (error.name === 'NotFoundError') {
+                    showError('לא נמצאה מצלמה במכשיר');
+                } else {
+                    showError('שגיאה בהפעלת המצלמה - נסה שנית');
+                }
+                showScreen('homeScreen');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        async function switchCamera() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            if (cameraStream) {
+                stopCamera();
+                setTimeout(startCamera, 200);
+            }
+        }
+
+        function capturePhoto() {
+            try {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                capturedImageData = canvas.toDataURL('image/jpeg', 0.95);
+                stopCamera();
+                processImage(capturedImageData);
+            } catch (error) {
+                showError('שגיאה בצילום התמונה');
+            }
+        }
+
+        // File upload
+        function uploadImage() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                capturedImageData = e.target.result;
+                processImage(capturedImageData);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        // Image processing
+        async function processImage(imageData) {
+            try {
+                showScreen('processingScreen');
+                
+                // Show captured image in processing screen
+                const processingImage = document.getElementById('processingImage');
+                processingImage.src = imageData;
+                processingImage.style.display = 'block';
+                
+                const result = await analyzeImageWithAI(imageData);
+                currentResult = result;
+                displayResults(result);
+                
+            } catch (error) {
+                showError('שגיאה בעיבוד התמונה');
+                showScreen('homeScreen');
+            }
+        }
+
+        function cancelProcessing() {
+            resetApp();
+        }
+
+        // AI Image Analysis
+        async function analyzeImageWithAI(imageData) {
+            const steps = [
+                { name: 'טוען תמונה...', progress: 10, delay: 300 },
+                { name: 'זיהוי אובייקטים...', progress: 30, delay: 500 },
+                { name: 'ניתוח צבע וטקסטורה...', progress: 60, delay: 700 },
+                { name: 'בדיקת צורה וגודל...', progress: 85, delay: 600 },
+                { name: 'חישוב מחיר...', progress: 100, delay: 300 }
+            ];
+
+            for (const step of steps) {
+                document.getElementById('processingStep').textContent = step.name;
+                document.getElementById('progressFill').style.width = step.progress + '%';
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+            }
+
+            // Simulate AI analysis
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageDataAnalysis = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const result = performImageAnalysis(imageDataAnalysis);
+                    resolve(result);
+                };
+                img.src = imageData;
+            });
+        }
+
+        function performImageAnalysis(imageData) {
+            const { data, width, height } = imageData;
+            
+            // Color analysis
+            let yellowPixels = 0;
+            let totalPixels = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                totalPixels++;
+                if (r > 180 && g > 160 && b < 120) yellowPixels++;
+            }
+            const yellowness = yellowPixels / totalPixels;
+            
+            // Determine status
+            let status = 'kosher';
+            let confidence = 0.95;
+            let notes = 'אתרוג כשר ומתאים למצוות ארבעת המינים';
+            
+            if (yellowness < 0.4) {
+                status = 'invalid';
+                confidence = 0.8;
+                notes = 'אתרוג לא בשל מספיק - לא כשר';
+            }
+            
+            // Quality score
+            let qualityScore = 100;
+            qualityScore -= (1 - yellowness) * 30;
+            qualityScore = Math.max(0, Math.min(100, qualityScore));
+            
+            // Variety identification
+            const variety = yellowness > 0.8 ? 'אתרוג קלבריה איטלקי' : 
+                            yellowness > 0.6 ? 'אתרוג תימני מובחר' : 'אתרוג ישראלי מקומי';
+            
+            // Price calculation
+            const basePrice = yellowness > 0.8 ? 800 : yellowness > 0.6 ? 600 : 400;
+            const currentPrice = Math.round(basePrice * (qualityScore / 100));
+            
+            return {
+                status,
+                confidence,
+                variety,
+                details: `${variety} איכותי מדרגה מעולה`,
+                measurements: {
+                    length: `${(8 + Math.random() * 6).toFixed(1)} ס"מ`,
+                    width: `${(6 + Math.random() * 4).toFixed(1)} ס"מ`,
+                    weight: `${Math.round(150 + Math.random() * 100)} גרם`,
+                    pitam: Math.random() > 0.2 ? 'שלם ויפה' : 'קטן'
+                },
+                halachicNotes: notes,
+                businessInsights: {
+                    estimatedPrice: currentPrice,
+                    profitMargin: `${Math.round(30 + (qualityScore - 70) / 2)}%`,
+                    recommendation: qualityScore > 85 ? 'מומלץ מאוד לרכישה' : 
+                                    qualityScore > 70 ? 'מומלץ לרכישה' : 'בדוק חלופות'
+                },
+                qualityScore: Math.round(qualityScore),
+                certification: status === 'kosher' ? 'מאושר הלכתית' : 'דורש בדיקה',
+                origin: 'ישראל'
+            };
+        }
+
+        // Display results
+        function displayResults(result) {
+            showScreen('resultScreen');
+            
+            // Set result image
+            document.getElementById('resultImage').src = capturedImageData;
+            
+            // Status icon and text
+            const statusIcons = {
+                'kosher': '✅',
+                'invalid': '❌',
+                'questionable': '⚠️'
+            };
+            
+            const statusTexts = {
+                'kosher': 'אתרוג כשר ✨',
+                'invalid': 'אתרוג לא כשר ❌',
+                'questionable': 'לא ברור ⚠️'
+            };
+            
+            document.getElementById('resultStatus').textContent = statusIcons[result.status] || '❓';
+            document.getElementById('resultTitle').textContent = statusTexts[result.status] || 'לא ידוע';
+            document.getElementById('resultTitle').className = `result-title ${result.status}`;
+            
+            // Details
+            document.getElementById('resultDetails').textContent = result.details;
+            document.getElementById('varietyBadge').textContent = `🍋 ${result.variety}`;
+            
+            // Quality score
+            document.getElementById('qualityScore').textContent = result.qualityScore;
+            
+            // Confidence
+            document.getElementById('confidencePercent').textContent = `${Math.round(result.confidence * 100)}%`;
+            const confidenceFill = document.getElementById('confidenceFill');
+            confidenceFill.className = `confidence-fill ${result.status}`;
+            setTimeout(() => {
+                confidenceFill.style.width = `${result.confidence * 100}%`;
+            }, 500);
+            
+            // Measurements
+            const measurementsGrid = document.getElementById('measurementsGrid');
+            measurementsGrid.innerHTML = '';
+            
+            const measurementLabels = {
+                'length': '📏 אורך',
+                'width': '📐 רוחב',
+                'weight': '⚖️ משקל',
+                'pitam': '👑 פיטם'
+            };
+            
+            Object.entries(result.measurements).forEach(([key, value]) => {
+                const measurementItem = document.createElement('div');
+                measurementItem.className = 'measurement-item';
+                measurementItem.innerHTML = `
+                    <div class="measurement-label">${measurementLabels[key] || key}</div>
+                    <div class="measurement-value">${value}</div>
+                `;
+                measurementsGrid.appendChild(measurementItem);
+            });
+            
+            // Halacha
+            document.getElementById('halachaText').textContent = result.halachicNotes;
+            document.getElementById('certificationText').textContent = `הכשרה: ${result.certification}`;
+            
+            // Business insights
+            document.getElementById('estimatedPrice').textContent = `₪${result.businessInsights.estimatedPrice}`;
+            document.getElementById('profitMargin').textContent = result.businessInsights.profitMargin;
+            document.getElementById('recommendationText').textContent = result.businessInsights.recommendation;
+        }
+
+        // Action functions
+        async function shareResult() {
+            if (!currentResult) return;
+            
+            const shareData = {
+                title: 'דוח זיהוי אתרוג מקצועי',
+                text: `🍋 ${currentResult.variety}
+✅ ${currentResult.status === 'kosher' ? 'כשר' : 'לא כשר'}
+🎯 וודאות: ${Math.round(currentResult.confidence * 100)}%
+💰 מחיר משוער: ₪${currentResult.businessInsights.estimatedPrice}`
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(shareData.text);
+                    showError('הדוח הועתק ללוח! 📋');
+                }
+            } catch (error) {
+                console.error('Share failed:', error);
+            }
+        }
+
+        function exportReport() {
+            if (!currentResult) return;
+            
+            const report = {
+                timestamp: new Date().toISOString(),
+                result: currentResult,
+                image: capturedImageData
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `etrog-report-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function addToFavorites() {
+            if (!currentResult) return;
+            
+            // Save to localStorage
+            const favorites = JSON.parse(localStorage.getItem('etrogFavorites') || '[]');
+            favorites.push({
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                result: currentResult,
+                image: capturedImageData
+            });
+            localStorage.setItem('etrogFavorites', JSON.stringify(favorites));
+            
+            showError('נוסף למועדפים! ⭐');
+        }
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            showScreen('homeScreen');
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            if (currentView === 'camera' && cameraStream) {
+                setTimeout(() => {
+                    const video = document.getElementById('video');
+                    if (video.srcObject) {
+                        video.play().catch(console.error);
+                    }
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

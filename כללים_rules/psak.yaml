@@ -1,0 +1,35 @@
+# פסיקה הלכתית – קובץ כללים בסיסי
+pitom:
+  yom_rishon_required: true     # ביום א' חייב שיהיה פיטום
+  missing: "pasul"              # פיטום חסר => פסול
+  broken: "pasul"               # פיטום שבור => פסול
+  after_day1_missing: "kosher_not_mehudar"   # אחרי יום א' - כשר אבל לא מהודר
+
+stain:
+  deltaE_threshold_minor: 10.0   # שינוי צבע קטן
+  deltaE_threshold_major: 14.0   # שינוי צבע חמור
+  area_minor_pct: 0.5            # אחוז שטח כתם קטן (מתוך כל האתרוג)
+  area_major_pct: 3.0            # אחוז שטח כתם גדול
+  minor_outcome: "kosher"        # כתם קטן => כשר
+  major_outcome: "bediavad_or_pasul"  # כתם גדול => כשר בדיעבד או פסול
+
+scratch:
+  length_major_mm: 15            # שריטה מעל 15 מ"מ נחשבת חמורה
+  outcome_major: "bediavad"      # שריטה חמורה => כשר בדיעבד
+
+hole:
+  through_outcome: "pasul"       # נקב מפולש => פסול
+  shallow_area_pct: 0.3          # אם שטח נקב רדוד >0.3% מהאתרוג => בעיה
+  shallow_outcome: "bediavad"    # נקב קטן => כשר בדיעבד
+
+shape:
+  eccentricity_max: 0.92         # חריגה גבוהה מדי באליפסה => בעייתי
+  convexity_min: 0.96            # קמירות נמוכה מדי => בעייתי
+  bad_outcome: "bediavad"        # צורת אתרוג לא תקינה => כשר בדיעבד
+
+labels:
+  mehudar: "מהודר"
+  kosher: "כשר"
+  kosher_not_mehudar: "כשר (לא מהודר)"
+  bediavad: "כשר בדיעבד"
+  pasul: "פסול"}```}ா  GitHub Copilot may not always provide accurate solutions. Always review and verify the code it generates. If it continues to suggest incomplete or incorrect code, consider writing the code manually or with minimal assistance. Ensure that the suggested code aligns with your project's coding standards and requirements.  If you need help refining the solution or have specific concerns, feel free to ask for assistance!  ```

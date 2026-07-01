@@ -1,0 +1,19 @@
+# תצורת נתונים לאימון YOLO על אתרוגים
+# עדכן את הנתיבים בהתאם למבנה הדאטה שלך
+path: .
+
+# נתיבים יחסיים לקובצי התמונות והתוויות
+train: ../../נתונים_dataset/גלמי_raw/train/images
+val: ../../נתונים_dataset/גלמי_raw/val/images
+
+# אם אתה מאמן סגמנטציה (yolov8s-seg), ודא שהתוויות בפורמט YOLO-seg
+# ואם אתה מאמן זיהוי (detect), ודא שהתוויות בפורמט YOLO-detect
+
+# מספר קטגוריות ושמות
+# לגרסה בסיסית: מזהים את האתרוג בלבד (לסגמנטציה של פרי)
+nc: 1
+names: [etrog]
+
+# לדגם פגמים (detect) אפשר ליצור קובץ YAML נוסף, לדוגמה defects.yaml עם:
+# nc: 6
+# names: [stain, scratch, hole, pitom_missing, pitom_broken, peel_missing]
