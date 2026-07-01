@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>בודק אתרוגים AI</title>
+  <style>
+    :root {
+      --bg: #fffbf0;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --primary: #f5a623;
+      --primary-dark: #d4891a;
+      --green: #2d7a2d;
+      --red: #c0392b;
+      --orange: #e67e22;
+      --border: #e8dfc4;
+      --shadow: 0 8px 32px rgba(80, 50, 0, 0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(160deg, #fffbf0 0%, #f9fef3 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .header .icon { font-size: 64px; line-height: 1; margin-bottom: 10px; }
+    .header h1 { font-size: 36px; letter-spacing: -1px; }
+    .header p { color: var(--muted); margin-top: 8px; font-size: 16px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 18px; margin-bottom: 16px; color: #333; }
+
+    /* ── API KEY ── */
+    .api-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .api-row input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 15px;
+      background: #fffdf8;
+      outline: none;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+    .api-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+    .api-status {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .api-status.saved { color: var(--green); }
+
+    /* ── UPLOAD ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 18px;
+      background: #fffdf5;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary);
+      background: #fff8e0;
+    }
+    .drop-zone .dz-icon { font-size: 52px; margin-bottom: 10px; }
+    .drop-zone .dz-text { color: var(--muted); font-size: 15px; }
+    .drop-zone .dz-sub { color: #bbb; font-size: 13px; margin-top: 6px; }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+
+    .preview-wrap {
+      display: none;
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .preview-wrap img {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      border-radius: 16px;
+      background: #f5f5f5;
+      display: block;
+    }
+    .preview-clear {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── BUTTON ── */
+    .analyze-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f5a623, #e8920f);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 4px 14px rgba(245,166,35,0.35);
+      margin-top: 4px;
+    }
+    .analyze-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245,166,35,0.45);
+    }
+    .analyze-btn:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* ── LOADER ── */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 32px;
+    }
+    .loader.active { display: block; }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 5px solid #f0e0b0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader p { color: var(--muted); font-size: 15px; }
+
+    /* ── RESULT ── */
+    .result { display: none; }
+    .result.show { display: block; }
+
+    .verdict-banner {
+      border-radius: 18px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .verdict-banner.kosher {
+      background: linear-gradient(135deg, #e8f8e8, #d4f0d4);
+      border: 2px solid #5cb85c;
+    }
+    .verdict-banner.pasul {
+      background: linear-gradient(135deg, #fdecea, #fad4d0);
+      border: 2px solid #e74c3c;
+    }
+    .verdict-banner.safek {
+      background: linear-gradient(135deg, #fff6e0, #feebc0);
+      border: 2px solid #e67e22;
+    }
+    .verdict-icon { font-size: 56px; margin-bottom: 8px; }
+    .verdict-label {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .verdict-banner.kosher .verdict-label { color: #1d6b1d; }
+    .verdict-banner.pasul .verdict-label { color: #a93226; }
+    .verdict-banner.safek .verdict-label { color: #a04000; }
+    .verdict-summary {
+      font-size: 16px;
+      margin-top: 10px;
+      opacity: 0.85;
+    }
+    .confidence-bar-wrap {
+      margin-top: 14px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      width: 70%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .confidence-bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s ease;
+    }
+    .verdict-banner.kosher .confidence-bar { background: #27ae60; }
+    .verdict-banner.pasul .confidence-bar { background: #e74c3c; }
+    .verdict-banner.safek .confidence-bar { background: #e67e22; }
+    .confidence-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ── CRITERIA GRID ── */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .criterion-card {
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid #eee;
+      background: #fafafa;
+    }
+    .criterion-card.ok { border-color: #b2dfb2; background: #f3fbf3; }
+    .criterion-card.bad { border-color: #f5b7b1; background: #fdf3f2; }
+    .criterion-card.safek { border-color: #fad7a0; background: #fefaf3; }
+    .criterion-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .criterion-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .criterion-card.ok .criterion-dot { background: #27ae60; }
+    .criterion-card.bad .criterion-dot { background: #e74c3c; }
+    .criterion-card.safek .criterion-dot { background: #e67e22; }
+    .criterion-name { font-weight: 700; font-size: 14px; }
+    .criterion-note { font-size: 13px; color: #555; line-height: 1.5; }
+
+    /* ── RECOMMENDATION ── */
+    .recommendation {
+      background: #fffbf0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+    }
+    .recommendation strong { color: #7a4d00; }
+
+    /* ── ERROR ── */
+    .error-box {
+      display: none;
+      background: #fdecea;
+      border: 1px solid #e74c3c;
+      border-radius: 14px;
+      padding: 16px 18px;
+      color: #a93226;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    .error-box.show { display: block; }
+
+    /* ── DISCLAIMER ── */
+    .disclaimer {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 560px) {
+      .criteria-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 28px; }
+      .verdict-label { font-size: 30px; }
+    }
+
+    button.small {
+      border: 1.5px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #444;
+      transition: 0.15s;
+    }
+    button.small:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="icon">🍋</div>
+    <h1>בודק אתרוגים AI</h1>
+    <p>העלה תמונת אתרוג — הבינה המלאכותית תבדוק אם הוא כשר לנטילה</p>
+  </div>
+
+  <!-- API KEY -->
+  <div class="card">
+    <h2>🔑 מפתח OpenRouter API</h2>
+    <div class="api-row">
+      <input type="password" id="apiKey" placeholder="הדבק כאן את המפתח שלך מ-openrouter.ai" />
+      <button class="small" onclick="saveKey()">שמור</button>
+    </div>
+    <p class="api-status" id="apiStatus">
+      קבל מפתח <strong>חינמי לגמרי</strong> (ללא כרטיס אשראי): <a href="https://openrouter.ai/settings/keys" target="_blank">openrouter.ai</a> ← הירשם → Keys → Create Key
+    </p>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card">
+    <h2>📷 העלה תמונת אתרוג</h2>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-icon">🍋</div>
+      <div class="dz-text">גרור תמונה לכאן, או לחץ לבחירה</div>
+      <div class="dz-sub">JPG, PNG, WEBP — עד 10MB</div>
+      <input type="file" id="fileInput" accept="image/*" />
+    </div>
+
+    <div class="preview-wrap" id="previewWrap">
+      <img id="previewImg" src="" alt="תצוגה מקדימה" />
+      <button class="preview-clear" onclick="clearImage()" title="הסר תמונה">✕</button>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()" disabled style="margin-top:16px;">
+      בדוק את האתרוג
+    </button>
+
+    <div class="disclaimer">
+      ⚠️ כלי זה מסייע לזיהוי ראשוני בלבד. בספק — יש להראות לרב מוסמך.
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p>הבינה המלאכותית בודקת את האתרוג...<br/>זה לוקח כמה שניות</p>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result" id="result">
+
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div class="verdict-label" id="verdictLabel"></div>
+      <div class="verdict-summary" id="verdictSummary"></div>
+      <div class="confidence-bar-wrap">
+        <div class="confidence-bar" id="confidenceBar" style="width:0%"></div>
+      </div>
+      <div class="confidence-label" id="confidenceLabel"></div>
+    </div>
+
+    <div class="card">
+      <h2>בדיקה לפי קריטריונים הלכתיים</h2>
+      <div class="criteria-grid" id="criteriaGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>המלצה</h2>
+      <div class="recommendation" id="recommendation"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button class="small" onclick="resetAll()">בדוק אתרוג נוסף</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const CRITERIA_META = {
+    chazazit: { name: "חזזית", desc: "כתמים על הקליפה" },
+    nekavim:  { name: "נקבים", desc: "חורים באתרוג" },
+    chaser:   { name: "חסר",   desc: "חלק חסר מהאתרוג" },
+    pitam:    { name: "פיטם",  desc: "קצה עליון שלם" },
+    uketz:    { name: "עוקץ",  desc: "גבעול קיים" },
+    tzeva:    { name: "צבע",   desc: "צהוב (לא ירוק)" },
+    tzura:    { name: "צורה",  desc: "ארוך, לא עגול" },
+    godel:    { name: "גודל",  desc: "מינימום כביצה" },
+  };
+
+  const PROMPT = `אתה מומחה בדיקת אתרוגים לפי הלכה יהודית. נתח את התמונה הנ"ל ובדוק אם האתרוג כשר לארבעת המינים בסוכות.
+
+בדוק בדיוק את 8 הקריטריונים הבאים:
+1. chazazit - חזזית: כתמים שחורים/חומים גדולים המכסים שטח ניכר
+2. nekavim - נקבים: חורים שחדרו לתוך הדופן
+3. chaser - חסר: חלק חסר מגוף האתרוג
+4. pitam - פיטם: הבליטה בקצה העליון (אם נשרה לגמרי - פסול. אם מולדתו בלא פיטם - כשר)
+5. uketz - עוקץ: הגבעול בתחתית (אם חסר לגמרי - פסול)
+6. tzeva - צבע: צהוב בשל. ירוק לחלוטין = פסול
+7. tzura - צורה: אורכי ומוארך, לא עגול כתפוח
+8. godel - גודל: לפחות גודל ביצה
+
+החזר תשובה ב-JSON בלבד, ללא טקסט נוסף, בפורמט הזה בדיוק:
+{
+  "verdict": "כשר",
+  "confidence": 85,
+  "summary": "משפט קצר אחד",
+  "criteria": {
+    "chazazit": {"status": "תקין", "note": "הסבר קצר"},
+    "nekavim":  {"status": "תקין", "note": "הסבר קצר"},
+    "chaser":   {"status": "תקין", "note": "הסבר קצר"},
+    "pitam":    {"status": "תקין", "note": "הסבר קצר"},
+    "uketz":    {"status": "תקין", "note": "הסבר קצר"},
+    "tzeva":    {"status": "תקין", "note": "הסבר קצר"},
+    "tzura":    {"status": "תקין", "note": "הסבר קצר"},
+    "godel":    {"status": "תקין", "note": "הסבר קצר"}
+  },
+  "recommendation": "המלצה מפורטת בעברית"
+}
+
+ערכי status אפשריים: "תקין" / "בעיה" / "ספק"
+ערכי verdict אפשריים: "כשר" / "פסול" / "ספק"
+אם התמונה אינה מציגה אתרוג כלל, החזר verdict: "שגיאה" ו-summary: "התמונה אינה מכילה אתרוג".`;
+
+  let imageBase64 = null;
+  let imageMime = "image/jpeg";
+
+  // ── Load saved key ──
+  window.addEventListener("load", () => {
+    localStorage.removeItem("gemini_api_key");
+    const saved = localStorage.getItem("openrouter_api_key");
+    if (saved) {
+      document.getElementById("apiKey").value = saved;
+      document.getElementById("apiStatus").textContent = "✓ מפתח שמור";
+      document.getElementById("apiStatus").className = "api-status saved";
+    }
+  });
+
+  function saveKey() {
+    const key = document.getElementById("apiKey").value.trim();
+    if (!key) return;
+    if (!key.startsWith("sk-or-")) {
+      document.getElementById("apiStatus").textContent = "⚠️ מפתח לא תקין — צריך להתחיל ב-sk-or-";
+      document.getElementById("apiStatus").className = "api-status";
+      return;
+    }
+    localStorage.setItem("openrouter_api_key", key);
+    document.getElementById("apiStatus").textContent = "✓ מפתח נשמר בהצלחה";
+    document.getElementById("apiStatus").className = "api-status saved";
+    updateBtn();
+  }
+
+  // ── File handling ──
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith("image/")) {
+      showError("אנא העלה קובץ תמונה בלבד.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showError("הקובץ גדול מדי. גודל מקסימלי: 10MB.");
+      return;
+    }
+    hideError();
+    imageMime = file.type;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      imageBase64 = dataUrl.split(",")[1];
+      document.getElementById("previewImg").src = dataUrl;
+      dropZone.style.display = "none";
+      document.getElementById("previewWrap").style.display = "block";
+      document.getElementById("result").className = "result";
+      updateBtn();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    imageBase64 = null;
+    fileInput.value = "";
+    document.getElementById("previewImg").src = "";
+    document.getElementById("previewWrap").style.display = "none";
+    dropZone.style.display = "flex";
+    document.getElementById("result").className = "result";
+    updateBtn();
+  }
+
+  function updateBtn() {
+    const key = document.getElementById("apiKey").value.trim();
+    document.getElementById("analyzeBtn").disabled = !(key && imageBase64);
+  }
+
+  document.getElementById("apiKey").addEventListener("input", updateBtn);
+
+  // ── Analysis ──
+  async function analyze() {
+    const apiKey = document.getElementById("apiKey").value.trim();
+    if (!apiKey || !imageBase64) return;
+
+    document.getElementById("loader").className = "loader active";
+    document.getElementById("result").className = "result";
+    document.getElementById("analyzeBtn").disabled = true;
+    hideError();
+
+    try {
+      const res = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://etrog-checker.local",
+            "X-Title": "Etrog Checker"
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-3.2-11b-vision-instruct:free",
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: PROMPT },
+                { type: "image_url", image_url: { url: `data:${imageMime};base64,${imageBase64}` } }
+              ]
+            }],
+            temperature: 0.1
+          })
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        const msg = err?.error?.message || `שגיאת שרת ${res.status}`;
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      const raw = data.choices?.[0]?.message?.content || "";
+
+      // Extract JSON
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("תשובה לא תקינה מהמודל. נסה שוב.");
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      renderResult(parsed);
+
+    } catch (e) {
+      showError("שגיאה: " + e.message + (e.message.includes("API_KEY") ? "\n\nבדוק שהמפתח תקין." : ""));
+    } finally {
+      document.getElementById("loader").className = "loader";
+      document.getElementById("analyzeBtn").disabled = false;
+    }
+  }
+
+  function renderResult(data) {
+    if (data.verdict === "שגיאה") {
+      showError(data.summary || "לא זוהה אתרוג בתמונה.");
+      return;
+    }
+
+    const banner = document.getElementById("verdictBanner");
+    const isKosher = data.verdict === "כשר";
+    const isPasul  = data.verdict === "פסול";
+
+    banner.className = "verdict-banner " + (isKosher ? "kosher" : isPasul ? "pasul" : "safek");
+    document.getElementById("verdictIcon").textContent = isKosher ? "✅" : isPasul ? "❌" : "⚠️";
+    document.getElementById("verdictLabel").textContent = data.verdict;
+    document.getElementById("verdictSummary").textContent = data.summary || "";
+
+    const conf = Math.min(100, Math.max(0, data.confidence || 0));
+    setTimeout(() => {
+      document.getElementById("confidenceBar").style.width = conf + "%";
+    }, 100);
+    document.getElementById("confidenceLabel").textContent = `רמת ביטחון: ${conf}%`;
+
+    // Criteria
+    const grid = document.getElementById("criteriaGrid");
+    grid.innerHTML = "";
+    const criteria = data.criteria || {};
+    for (const [key, meta] of Object.entries(CRITERIA_META)) {
+      const c = criteria[key] || { status: "ספק", note: "לא נבדק" };
+      const cls = c.status === "תקין" ? "ok" : c.status === "בעיה" ? "bad" : "safek";
+      const icon = c.status === "תקין" ? "✓" : c.status === "בעיה" ? "✗" : "?";
+      grid.innerHTML += `
+        <div class="criterion-card ${cls}">
+          <div class="criterion-top">
+            <div class="criterion-dot"></div>
+            <div class="criterion-name">${meta.name} <span style="font-weight:400;font-size:12px;color:#888">${meta.desc}</span></div>
+          </div>
+          <div class="criterion-note">${icon} ${c.note || ""}</div>
+        </div>`;
+    }
+
+    document.getElementById("recommendation").innerHTML =
+      `<strong>המלצה:</strong> ${data.recommendation || ""}`;
+
+    document.getElementById("result").className = "result show";
+    document.getElementById("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetAll() {
+    clearImage();
+    document.getElementById("result").className = "result";
+    document.getElementById("loader").className = "loader";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("errorBox");
+    box.textContent = msg;
+    box.className = "error-box show";
+  }
+
+  function hideError() {
+    document.getElementById("errorBox").className = "error-box";
+  }
+</script>
+</body>
+</html>
